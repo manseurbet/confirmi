@@ -4,107 +4,59 @@ const path = require("path");
 const multer = require("multer");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// ⚡ Ton domaine Render (change si tu passes en local)
-const DOMAIN = process.env.DOMAIN || "https://confirmi.onrender.com";
+const upload = multer({ dest: "uploads/" });
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
 
-// fichiers statiques
-app.use(express.static(path.join(__dirname, "frontend")));
+const TRANSACTIONS_FILE = "transactions.json";
 
-// stockage upload
-const upload = multer({
-  dest: "uploads/",
-  fileFilter: (req, file, cb) => cb(null, true)
-});
+/* =======================
+   ROUTES API (D’ABORD)
+   ======================= */
 
-// fichier JSON pour stocker les transactions
-const DB_FILE = "transactions.json";
-
-// fonctions utilitaires DB
-function loadDB() {
-  if (!fs.existsSync(DB_FILE)) return {};
-  return JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
-}
-
-function saveDB(data) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-}
-
-// création transaction
-app.post("/create-transaction", (req, res) => {
-  const { clientName, productRef, amount, description } = req.body;
-
-  const id = Date.now().toString();
-  const db = loadDB();
-
-  db[id] = {
-    id,
-    clientName,
-    productRef,
-    amount,
-    description,
-    status: "pending",
-    paymentMode: null,
-    proof: null,
-    validatedAt: null
-  };
-
-  saveDB(db);
-
-  // 🔹 lien client complet avec domaine
-  const clientLink = `${DOMAIN}/client.html?id=${id}`;
-
-  res.json({
-    success: true,
-    clientLink
-  });
-});
-
-// lecture transaction (SANS MODIFICATION)
 app.get("/transaction/:id", (req, res) => {
-  const db = loadDB();
-  const transaction = db[req.params.id];
+  const id = req.params.id;
+  const transactions = JSON.parse(fs.readFileSync(TRANSACTIONS_FILE));
 
-  if (!transaction) {
-    return res.status(404).json({ success: false });
+  const tx = transactions.find(t => t.id === id);
+
+  if (!tx) {
+    return res.status(404).json({ error: "Transaction introuvable" });
   }
 
-  res.json(transaction);
+  res.json(tx);
 });
 
-// validation transaction (VERROU DÉFINITIF)
-app.post("/validate/:id", upload.single("proof"), (req, res) => {
-  const db = loadDB();
-  const transaction = db[req.params.id];
+app.post("/validate-transaction/:id", upload.single("paymentFile"), (req, res) => {
+  const id = req.params.id;
+  const transactions = JSON.parse(fs.readFileSync(TRANSACTIONS_FILE));
 
-  if (!transaction) {
-    return res.status(404).json({ success: false });
+  const tx = transactions.find(t => t.id === id);
+  if (!tx) return res.status(404).json({ error: "Introuvable" });
+
+  if (tx.status === "validated") {
+    return res.status(400).json({ error: "Déjà validée" });
   }
 
-  if (transaction.status === "validated") {
-    return res.status(403).json({
-      success: false,
-      message: "Transaction déjà validée"
-    });
-  }
-
-  transaction.status = "validated";
-  transaction.paymentMode = req.body.paymentMode || "espece";
-  transaction.validatedAt = new Date().toISOString();
-
+  tx.status = "validated";
+  tx.paymentMethod = req.body.paymentMethod;
   if (req.file) {
-    transaction.proof = req.file.filename;
+    tx.paymentFile = req.file.filename;
   }
 
-  saveDB(db);
-
+  fs.writeFileSync(TRANSACTIONS_FILE, JSON.stringify(transactions, null, 2));
   res.json({ success: true });
 });
 
-app.listen(PORT, () => {
-  console.log("Serveur lancé sur port", PORT);
+/* =======================
+   HTML ENSUITE SEULEMENT
+   ======================= */
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server running on", PORT));
+
