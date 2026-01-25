@@ -1,14 +1,145 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Confirmi – Vendeur</title>
+<meta charset="UTF-8">
+<title>Formulaire Vendeur</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f6f8;
+  margin: 0;
+  padding: 30px;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+form {
+  max-width: 500px;
+  margin: auto;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+input[readonly] {
+  background-color: #eeeeee;
+  color: #555;
+}
+
+button {
+  width: 100%;
+  margin-top: 25px;
+  padding: 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#clientLink {
+  margin-top: 10px;
+  font-weight: bold;
+}
+</style>
 </head>
 <body>
-  <h1>Confirmi – Page Vendeur</h1>
-  <p>Serveur fonctionnel.</p>
+
+<h2>Création de commande</h2>
+
+<form id="vendorForm">
+  <label>Nom du client
+    <input type="text" id="clientName" required>
+  </label>
+
+  <label>Référence produit
+    <input type="text" id="productRef" required>
+  </label>
+
+  <label>Montant
+    <input type="number" id="amount" required>
+  </label>
+
+  <label>Description
+    <input type="text" id="description">
+  </label>
+
+  <button type="submit">Créer la transaction</button>
+</form>
+
+<br>
+<label>Lien client
+  <input type="text" id="clientLink" readonly style="width:100%">
+</label>
+
+<script>
+// --------------------
+// Constantes champs
+// --------------------
+const clientName = document.getElementById("clientName");
+const productRef = document.getElementById("productRef");
+const amount = document.getElementById("amount");
+const description = document.getElementById("description");
+const clientLinkField = document.getElementById("clientLink");
+
+// --------------------
+// Form submit
+// --------------------
+document.getElementById("vendorForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  try {
+    const res = await fetch("/create-transaction", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clientName: clientName.value,
+        productRef: productRef.value,
+        amount: amount.value,
+        description: description.value
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      clientLinkField.value = data.clientLink;
+      alert("Transaction créée !\nCopiez le lien pour le client.");
+      // Facultatif : ouvre automatiquement le lien
+      // window.open(data.clientLink, "_blank");
+    } else {
+      alert("Erreur lors de la création de la transaction.");
+    }
+  } catch (err) {
+    alert("Erreur serveur : " + err);
+  }
+});
+</script>
+
 </body>
 </html>
-
-
-
