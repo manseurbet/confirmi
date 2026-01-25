@@ -7,7 +7,7 @@ const app = express();
 const upload = multer({ dest: "uploads/" });
 
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static("frontend"));
 
 const TRANSACTIONS_FILE = "transactions.json";
 
@@ -54,7 +54,7 @@ app.post("/validate-transaction/:id", upload.single("paymentFile"), (req, res) =
    ======================= */
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
 
 const PORT = process.env.PORT || 3000;
