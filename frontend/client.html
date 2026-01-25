@@ -2,190 +2,113 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Confirmation de commande – Confirmi</title>
-
+<title>Formulaire Client</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f5f6f8;
-  padding: 30px;
-}
-
-form {
-  max-width: 500px;
-  margin: auto;
-  background: #fff;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-label {
-  display: block;
-  margin-top: 15px;
-  font-weight: bold;
-}
-
-input, select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-input[readonly] {
-  background: #eee;
-}
-
-button {
-  margin-top: 25px;
-  width: 100%;
-  padding: 12px;
-  background: #28a745;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-button:disabled {
-  background: #999;
-  cursor: not-allowed;
-}
-
-.hidden {
-  display: none;
-}
+body { font-family: Arial, sans-serif; background: #f5f6f8; padding: 30px; }
+h2 { text-align: center; margin-bottom: 20px; }
+form { max-width: 500px; margin: auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+label { display: block; margin-top: 15px; font-weight: bold; }
+input, select { width: 100%; padding: 10px; margin-top: 6px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
+input[readonly] { background-color: #eee; color: #555; }
+button { width: 100%; margin-top: 25px; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+button:hover { background-color: #0056b3; }
+#message { text-align:center; font-weight:bold; margin-bottom:20px; }
 </style>
 </head>
-
 <body>
 
-<p id="introText" style="text-align:center;font-weight:bold;"></p>
+<h2>Confirmation de votre commande</h2>
+<div id="message">Merci de confirmer votre commande via ce lien sécurisé Confirmi :</div>
 
 <form id="clientForm">
-
   <label>Nom du client
-    <input id="clientName" readonly>
+    <input type="text" id="clientName" readonly>
   </label>
-
+  
   <label>Référence produit
-    <input id="productRef" readonly>
+    <input type="text" id="productRef" readonly>
   </label>
-
+  
   <label>Montant
-    <input id="amount" readonly>
+    <input type="number" id="amount" readonly>
   </label>
-
+  
   <label>Description
-    <input id="description" readonly>
+    <input type="text" id="description" readonly>
   </label>
-
+  
   <label>Mode de paiement
     <select id="paymentMethod" required>
-      <option value="">-- Choisir --</option>
+      <option value="">Choisir</option>
       <option value="especes">Espèces</option>
       <option value="virement">Virement</option>
       <option value="cheque">Chèque</option>
     </select>
   </label>
-
-  <label id="uploadLabel" class="hidden">
-    Justificatif de paiement
-    <input type="file" id="paymentFile" accept="image/*,application/pdf">
+  
+  <label>Pièce justificative (si nécessaire)
+    <input type="file" id="paymentFile">
   </label>
-
+  
   <button type="submit">Valider la commande</button>
-
 </form>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const transactionId = params.get("id");
+const urlParams = new URLSearchParams(window.location.search);
+const transactionId = urlParams.get("id");
 
 if (!transactionId) {
-  alert("ID de transaction manquant.");
-  throw new Error("ID manquant");
+  alert("ID de transaction manquant !");
+  document.getElementById("clientForm").style.display = "none";
+  throw new Error("ID de transaction manquant");
 }
 
-const introText = document.getElementById("introText");
 const form = document.getElementById("clientForm");
-const paymentMethod = document.getElementById("paymentMethod");
-const uploadLabel = document.getElementById("uploadLabel");
-const paymentFile = document.getElementById("paymentFile");
 
-// Chargement transaction
+// Récupérer transaction
 fetch(`/transaction/${transactionId}`)
   .then(res => {
     if (!res.ok) throw new Error("Transaction introuvable");
     return res.json();
   })
-  .then(data => {
-
-    introText.innerText =
-      "Merci de confirmer votre commande via ce lien sécurisé Confirmi :";
-
-    document.getElementById("clientName").value = data.clientName;
-    document.getElementById("productRef").value = data.productRef;
-    document.getElementById("amount").value = data.amount;
-    document.getElementById("description").value = data.description || "";
-
-    // Déjà validée
-    if (data.status === "validated") {
-      alert("Cette commande a déjà été confirmée.\nAucune modification n’est possible.");
-      form.querySelectorAll("input, select, button")
-        .forEach(el => el.disabled = true);
+  .then(tx => {
+    if (tx.status === "validated") {
+      form.innerHTML = "<p style='text-align:center; font-weight:bold;'>Cette commande a déjà été confirmée. Aucune modification n’est possible.</p>";
+      return;
     }
+
+    // Pré-remplissage
+    document.getElementById("clientName").value = tx.clientName || "";
+    document.getElementById("productRef").value = tx.productRef || "";
+    document.getElementById("amount").value = tx.amount || "";
+    document.getElementById("description").value = tx.description || "";
+
+    // Option mode paiement pré-sélection
+    if(tx.paymentMethod) document.getElementById("paymentMethod").value = tx.paymentMethod;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = new FormData();
+      data.append("paymentMethod", document.getElementById("paymentMethod").value);
+      if(document.getElementById("paymentFile").files[0]) {
+        data.append("paymentFile", document.getElementById("paymentFile").files[0]);
+      }
+
+      const res = await fetch(`/validate-transaction/${transactionId}`, { method: "POST", body: data });
+      const result = await res.json();
+
+      if(result.success) {
+        alert("Commande validée !");
+        location.reload(); // recharge le formulaire pour afficher blocage
+      } else {
+        alert(result.error || "Erreur lors de la validation");
+      }
+    });
   })
   .catch(err => {
-    alert("Erreur lors du chargement de la commande.");
     console.error(err);
+    form.innerHTML = "<p style='text-align:center; font-weight:bold;'>Erreur serveur : " + err.message + "</p>";
   });
-
-// Gestion mode de paiement
-paymentMethod.addEventListener("change", () => {
-  if (paymentMethod.value === "especes") {
-    uploadLabel.classList.add("hidden");
-    paymentFile.value = "";
-  } else {
-    uploadLabel.classList.remove("hidden");
-  }
-});
-
-// Validation
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  if (!paymentMethod.value) {
-    alert("Veuillez choisir un mode de paiement.");
-    return;
-  }
-
-  if (paymentMethod.value !== "especes" && paymentFile.files.length === 0) {
-    alert("Veuillez joindre un justificatif.");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("paymentMethod", paymentMethod.value);
-  if (paymentFile.files[0]) {
-    formData.append("paymentFile", paymentFile.files[0]);
-  }
-
-  const res = await fetch(`/validate-transaction/${transactionId}`, {
-    method: "POST",
-    body: formData
-  });
-
-  if (res.ok) {
-    alert("Commande confirmée avec succès.");
-    location.reload();
-  } else {
-    alert("Erreur lors de la validation.");
-  }
-});
 </script>
 
 </body>
