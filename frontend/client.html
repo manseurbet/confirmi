@@ -4,111 +4,142 @@
 <meta charset="UTF-8">
 <title>Formulaire Client</title>
 <style>
-body { font-family: Arial, sans-serif; background: #f5f6f8; padding: 30px; }
-h2 { text-align: center; margin-bottom: 20px; }
-form { max-width: 500px; margin: auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-label { display: block; margin-top: 15px; font-weight: bold; }
-input, select { width: 100%; padding: 10px; margin-top: 6px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
-input[readonly] { background-color: #eee; color: #555; }
-button { width: 100%; margin-top: 25px; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-button:hover { background-color: #0056b3; }
-#message { text-align:center; font-weight:bold; margin-bottom:20px; }
+body { font-family: Arial, sans-serif; background: #f5f6f8; margin:0; padding:30px; }
+h2 { text-align:center; margin-bottom:20px; }
+form { max-width:500px; margin:auto; background:#fff; padding:25px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+label { display:block; margin-top:15px; font-weight:bold; }
+input, select { width:100%; padding:10px; margin-top:6px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; font-size:14px; }
+input[readonly] { background:#eee; color:#555; }
+button { width:100%; margin-top:25px; padding:12px; background-color:#28a745; color:white; border:none; border-radius:8px; font-size:16px; cursor:pointer; }
+button:hover { background-color:#218838; }
 </style>
 </head>
 <body>
 
-<h2>Confirmation de votre commande</h2>
-<div id="message">Merci de confirmer votre commande via ce lien sécurisé Confirmi :</div>
+<h2>Formulaire Client</h2>
 
-<form id="clientForm">
+<form id="clientForm" enctype="multipart/form-data">
   <label>Nom du client
     <input type="text" id="clientName" readonly>
   </label>
-  
+
   <label>Référence produit
     <input type="text" id="productRef" readonly>
   </label>
-  
+
   <label>Montant
     <input type="number" id="amount" readonly>
   </label>
-  
+
   <label>Description
     <input type="text" id="description" readonly>
   </label>
-  
+
   <label>Mode de paiement
     <select id="paymentMethod" required>
-      <option value="">Choisir</option>
-      <option value="especes">Espèces</option>
-      <option value="virement">Virement</option>
-      <option value="cheque">Chèque</option>
+      <option value="">-- Choisir --</option>
+      <option value="Especes">Espèces</option>
+      <option value="Carte">Carte</option>
+      <option value="Virement">Virement</option>
     </select>
   </label>
-  
-  <label>Pièce justificative (si nécessaire)
-    <input type="file" id="paymentFile">
+
+  <label id="attachmentLabel">Pièce justificative
+    <input type="file" id="attachment">
   </label>
-  
-  <button type="submit">Valider la commande</button>
+
+  <button type="submit">Confirmer la transaction</button>
 </form>
 
 <script>
-const urlParams = new URLSearchParams(window.location.search);
-const transactionId = urlParams.get("id");
-
-if (!transactionId) {
-  alert("ID de transaction manquant !");
-  document.getElementById("clientForm").style.display = "none";
-  throw new Error("ID de transaction manquant");
+// --------------------
+// Récupération transaction
+// --------------------
+function getTransactionId() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("id");
 }
 
-const form = document.getElementById("clientForm");
+async function loadTransaction() {
+  const id = getTransactionId();
+  if (!id) { alert("ID de transaction manquant !"); return; }
 
-// Récupérer transaction
-fetch(`/transaction/${transactionId}`)
-  .then(res => {
-    if (!res.ok) throw new Error("Transaction introuvable");
-    return res.json();
-  })
-  .then(tx => {
-    if (tx.status === "validated") {
-      form.innerHTML = "<p style='text-align:center; font-weight:bold;'>Cette commande a déjà été confirmée. Aucune modification n’est possible.</p>";
-      return;
+  try {
+    const res = await fetch(`/transaction/${id}`);
+    const data = await res.json();
+    if (!data.success) { alert("Transaction introuvable !"); return; }
+
+    const t = data.transaction;
+    document.getElementById("clientName").value = t.clientName;
+    document.getElementById("productRef").value = t.productRef;
+    document.getElementById("amount").value = t.amount;
+    document.getElementById("description").value = t.description || "";
+
+    // Si transaction déjà validée côté serveur, bloquer modification
+    if(t.paymentMethod){
+      document.getElementById("paymentMethod").value = t.paymentMethod;
+      document.getElementById("paymentMethod").disabled = true;
     }
 
-    // Pré-remplissage
-    document.getElementById("clientName").value = tx.clientName || "";
-    document.getElementById("productRef").value = tx.productRef || "";
-    document.getElementById("amount").value = tx.amount || "";
-    document.getElementById("description").value = tx.description || "";
-
-    // Option mode paiement pré-sélection
-    if(tx.paymentMethod) document.getElementById("paymentMethod").value = tx.paymentMethod;
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const data = new FormData();
-      data.append("paymentMethod", document.getElementById("paymentMethod").value);
-      if(document.getElementById("paymentFile").files[0]) {
-        data.append("paymentFile", document.getElementById("paymentFile").files[0]);
-      }
-
-      const res = await fetch(`/validate-transaction/${transactionId}`, { method: "POST", body: data });
-      const result = await res.json();
-
-      if(result.success) {
-        alert("Commande validée !");
-        location.reload(); // recharge le formulaire pour afficher blocage
-      } else {
-        alert(result.error || "Erreur lors de la validation");
-      }
-    });
-  })
-  .catch(err => {
+  } catch (err) {
     console.error(err);
-    form.innerHTML = "<p style='text-align:center; font-weight:bold;'>Erreur serveur : " + err.message + "</p>";
-  });
+    alert("Erreur lors du chargement de la transaction !");
+  }
+}
+
+loadTransaction();
+
+// --------------------
+// Validation dynamique
+// --------------------
+const paymentMethod = document.getElementById("paymentMethod");
+const attachment = document.getElementById("attachment");
+
+paymentMethod.addEventListener("change", () => {
+  if(paymentMethod.value === "Especes") {
+    attachment.removeAttribute("required");
+  } else {
+    attachment.setAttribute("required", true);
+  }
+});
+
+// --------------------
+// Submit et upload
+// --------------------
+document.getElementById("clientForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const id = getTransactionId();
+  if(!id) { alert("ID manquant"); return; }
+
+  const payment = paymentMethod.value;
+  const file = attachment.files[0];
+
+  if(!payment){ alert("Veuillez choisir un mode de paiement."); return; }
+  if(payment !== "Especes" && !file){ alert("Veuillez joindre la pièce justificative."); return; }
+
+  const formData = new FormData();
+  formData.append("paymentMethod", payment);
+  if(file) formData.append("attachment", file);
+
+  try {
+    const res = await fetch(`/confirm-transaction/${id}`, {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+
+    if(data.success){
+      alert("Transaction confirmée !");
+      paymentMethod.disabled = true; // bloquer changement mode paiement
+    } else {
+      alert("Erreur : " + data.message);
+    }
+  } catch(err){
+    console.error(err);
+    alert("Erreur lors de l'envoi de la transaction !");
+  }
+});
 </script>
 
 </body>
