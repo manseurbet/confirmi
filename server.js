@@ -4,58 +4,152 @@ const path = require("path");
 const multer = require("multer");
 
 const app = express();
-const upload = multer({ dest: "uploads/" });
-
-app.use(express.json());
-
-const TRANSACTIONS_FILE = "transactions.json";
-
-/* =========================
-   ROUTES API – EN PREMIER
-   ========================= */
-
-// Récupérer une transaction par ID
-app.get("/transaction/:id", (req, res) => {
-  const id = req.params.id;
-  let transactions = [];
-  try { transactions = JSON.parse(fs.readFileSync(TRANSACTIONS_FILE)); }
-  catch (err) { return res.status(500).json({ error: "Impossible de lire les transactions" }); }
-
-  const tx = transactions.find(t => t.id === id);
-  if (!tx) return res.status(404).json({ error: "Transaction introuvable" });
-  res.json(tx);
-});
-
-// Validation d'une transaction
-app.post("/validate-transaction/:id", upload.single("paymentFile"), (req, res) => {
-  const id = req.params.id;
-  let transactions = [];
-  try { transactions = JSON.parse(fs.readFileSync(TRANSACTIONS_FILE)); }
-  catch (err) { return res.status(500).json({ error: "Impossible de lire les transactions" }); }
-
-  const tx = transactions.find(t => t.id === id);
-  if (!tx) return res.status(404).json({ error: "Transaction introuvable" });
-  if (tx.status === "validated") return res.status(400).json({ error: "Déjà validée" });
-
-  // Mise à jour
-  tx.status = "validated";
-  tx.paymentMethod = req.body.paymentMethod;
-  if (req.file) tx.paymentFile = req.file.filename;
-
-  fs.writeFileSync(TRANSACTIONS_FILE, JSON.stringify(transactions, null, 2));
-  res.json({ success: true });
-});
-
-/* =========================
-   SERVIR LE FRONTEND – APRÈS API
-   ========================= */
-
-app.use(express.static("frontend")); // TOUS LES HTML/CSS/JS ici
-
-/* =========================
-   LANCEMENT DU SERVEUR
-   ========================= */
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+/* =========================
+   MIDDLEWARES
+========================= */
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "frontend")));
+
+/* =========================
+   DOSSIERS & FICHIERS
+========================= */
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
+
+const transactionsFile = path.join(__dirname, "transactions.json");
+if (!fs.existsSync(transactionsFile)) {
+  fs.writeFileSync(transactionsFile, JSON.stringify([]));
+}
+
+/* =========================
+   MULTER – CONFIG PRO
+========================= */
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    let ext = "";
+
+    if (file.mimetype === "image/jpeg") ext = ".jpg";
+    else if (file.mimetype === "image/png") ext = ".png";
+    else if (file.mimetype === "application/pdf") ext = ".pdf";
+
+    cb(null, Date.now() + ext);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  const allowed = [
+    "image/jpeg",
+    "image/png",
+    "application/pdf"
+  ];
+
+  if (allowed.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Type de fichier non autorisé"), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5 MB
+});
+
+/* =========================
+   ROUTE VENDEUR
+========================= */
+app.post("/create-transaction", (req, res) => {
+  const { clientName, productRef, amount, description } = req.body;
+
+  if (!clientName || !productRef || !amount) {
+    return res.status(400).json({ success: false, message: "Données manquantes" });
+  }
+
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile));
+  const transactionId = Date.now();
+
+  const transaction = {
+    transactionId,
+    clientName,
+    productRef,
+    amount,
+    description,
+    paymentMethod: null,
+    attachment: null
+  };
+
+  transactions.push(transaction);
+  fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
+
+  const clientLink = `${req.protocol}://${req.get("host")}/client.html?id=${transactionId}`;
+
+  res.json({ success: true, clientLink });
+});
+
+/* =========================
+   ROUTE CLIENT – LECTURE
+========================= */
+app.get("/transaction/:id", (req, res) => {
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile));
+  const transaction = transactions.find(t => t.transactionId == req.params.id);
+
+  if (!transaction) {
+    return res.status(404).json({ success: false });
+  }
+
+  res.json({ success: true, transaction });
+});
+
+/* =========================
+   ROUTE CLIENT – VALIDATION
+========================= */
+app.post(
+  "/confirm-transaction/:id",
+  upload.single("attachment"),
+  (req, res) => {
+    const { paymentMethod } = req.body;
+    const transactions = JSON.parse(fs.readFileSync(transactionsFile));
+    const transaction = transactions.find(t => t.transactionId == req.params.id);
+
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: "Transaction introuvable" });
+    }
+
+    if (transaction.paymentMethod) {
+      return res.status(400).json({ success: false, message: "Transaction déjà validée" });
+    }
+
+    if (!paymentMethod) {
+      return res.status(400).json({ success: false, message: "Mode de paiement requis" });
+    }
+
+    if (paymentMethod !== "Especes" && !req.file) {
+      return res.status(400).json({ success: false, message: "Pièce justificative requise" });
+    }
+
+    transaction.paymentMethod = paymentMethod;
+
+    if (req.file) {
+      transaction.attachment = req.file.filename;
+      transaction.originalFilename = req.file.originalname;
+    }
+
+    fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
+
+    res.json({ success: true });
+  }
+);
+
+/* =========================
+   LANCEMENT SERVEUR
+========================= */
+app.listen(PORT, () => {
+  console.log(`✅ Confirmi en ligne : http://localhost:${PORT}`);
+});
 
