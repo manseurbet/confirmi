@@ -6,6 +6,9 @@ const multer = require("multer");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ⚡ Ton domaine Render (change si tu passes en local)
+const DOMAIN = process.env.DOMAIN || "https://confirmi.onrender.com";
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -15,14 +18,13 @@ app.use(express.static(path.join(__dirname, "frontend")));
 // stockage upload
 const upload = multer({
   dest: "uploads/",
-  fileFilter: (req, file, cb) => {
-    cb(null, true); // accepte tout type
-  }
+  fileFilter: (req, file, cb) => cb(null, true)
 });
 
+// fichier JSON pour stocker les transactions
 const DB_FILE = "transactions.json";
 
-// utils DB
+// fonctions utilitaires DB
 function loadDB() {
   if (!fs.existsSync(DB_FILE)) return {};
   return JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
@@ -53,9 +55,12 @@ app.post("/create-transaction", (req, res) => {
 
   saveDB(db);
 
+  // 🔹 lien client complet avec domaine
+  const clientLink = `${DOMAIN}/client.html?id=${id}`;
+
   res.json({
     success: true,
-    clientLink: `/client.html?id=${id}`
+    clientLink
   });
 });
 
