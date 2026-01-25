@@ -1,161 +1,167 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Confirmation de commande</title>
-
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f5f6f8;
-  padding: 30px;
-}
-
-form, .final {
-  max-width: 500px;
-  margin: auto;
-  background: #fff;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-label {
-  display: block;
-  margin-top: 15px;
-}
-
-input, select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-}
-
-button {
-  margin-top: 25px;
-  width: 100%;
-  padding: 12px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-}
-
-.final {
-  text-align: center;
-}
-</style>
+  <meta charset="UTF-8" />
+  <title>Confirmation de commande – Confirmi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 30px;
+    }
+    .box {
+      background: white;
+      padding: 25px;
+      max-width: 500px;
+      margin: auto;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .hidden {
+      display: none;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
 </head>
-
 <body>
 
-<form id="form">
-  <h2>Confirmation de commande</h2>
+<div class="box">
+  <p><strong>Merci de confirmer votre commande via ce lien sécurisé Confirmi :</strong></p>
 
-  <p><strong>Merci de confirmer votre commande via ce lien sécurisé Confirmi.</strong></p>
+  <form id="form" class="hidden">
+    <label>Nom du client</label>
+    <input type="text" id="clientName" disabled>
 
-  <label>Nom du client
-    <input id="clientName" readonly>
-  </label>
+    <label>Référence produit</label>
+    <input type="text" id="productRef" disabled>
 
-  <label>Référence produit
-    <input id="productRef" readonly>
-  </label>
+    <label>Montant</label>
+    <input type="number" id="amount" disabled>
 
-  <label>Montant
-    <input id="amount" readonly>
-  </label>
+    <label>Description</label>
+    <input type="text" id="description" disabled>
 
-  <label>Description
-    <input id="description" readonly>
-  </label>
-
-  <label>Mode de paiement
-    <select name="paymentMode" id="paymentMode">
-      <option value="espece">Espèce</option>
+    <label>Mode de paiement</label>
+    <select id="paymentMode" required>
+      <option value="espece">Espèces</option>
       <option value="virement">Virement</option>
     </select>
-  </label>
 
-  <label id="proofBlock" style="display:none;">
-    Justificatif
-    <input type="file" name="proof">
-  </label>
+    <div id="proofBlock" class="hidden">
+      <label>Preuve de paiement</label>
+      <input type="file" id="proof" accept="image/*,application/pdf">
+    </div>
 
-  <button type="submit">Valider définitivement</button>
-</form>
+    <button type="submit">Confirmer la commande</button>
+  </form>
 
-<div class="final" id="final" style="display:none;">
-  <h3>✅ Transaction déjà validée</h3>
-  <p>Cette commande a déjà été confirmée.<br>
-  Aucune modification n’est possible.</p>
+  <div id="final" class="hidden success">
+    Cette commande a déjà été confirmée.<br>
+    Aucune modification n’est possible.
+  </div>
 </div>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
 
-if (!id) {
-  document.body.innerHTML = "ID de transaction manquant";
-}
+  const form = document.getElementById("form");
+  const final = document.getElementById("final");
+  const paymentMode = document.getElementById("paymentMode");
+  const proofBlock = document.getElementById("proofBlock");
 
-// récupération transaction depuis le serveur
-fetch(`/transaction/${id}`)
-  .then(r => r.json())
-  .then(t => {
-    if (!t || t.status === undefined) {
-      document.body.innerHTML = "Transaction introuvable";
-      return;
-    }
+  if (!id) {
+    document.body.innerHTML = "ID de transaction manquant";
+    throw new Error("ID manquant");
+  }
 
-    if (t.status === "validated") {
-      document.getElementById("form").style.display = "none";
-      document.getElementById("final").style.display = "block";
-      return;
-    }
+  // Charger la transaction
+  fetch(`/transaction/${id}`)
+    .then(res => {
+      if (!res.ok) throw new Error("Transaction introuvable");
+      return res.json();
+    })
+    .then(t => {
+      // Pré-remplissage
+      document.getElementById("clientName").value = t.clientName || "";
+      document.getElementById("productRef").value = t.productRef || "";
+      document.getElementById("amount").value = t.amount || "";
+      document.getElementById("description").value = t.description || "";
 
-    // pré-remplissage avec sécurité
-    clientName.value = t.clientName || "";
-    productRef.value = t.productRef || "";
-    amount.value = t.amount || "";
-    description.value = t.description || "";
+      // Déjà validée
+      if (t.status === "validated") {
+        final.classList.remove("hidden");
+        return;
+      }
 
-    // sélection mode de paiement si déjà défini
-    if (t.paymentMode) {
-      paymentMode.value = t.paymentMode;
-      proofBlock.style.display = t.paymentMode === "virement" ? "block" : "none";
-    }
-  })
-  .catch(err => {
-    console.error(err);
-    document.body.innerHTML = "Erreur lors de la récupération de la transaction";
+      // Mode de paiement
+      paymentMode.value = t.paymentMode || "espece";
+      proofBlock.classList.toggle("hidden", paymentMode.value !== "virement");
+
+      form.classList.remove("hidden");
+    })
+    .catch(err => {
+      alert("Cette commande est introuvable ou invalide.");
+      console.error(err);
+    });
+
+  paymentMode.addEventListener("change", () => {
+    proofBlock.classList.toggle("hidden", paymentMode.value !== "virement");
   });
 
-// affichage conditionnel du justificatif
-paymentMode.onchange = () => {
-  proofBlock.style.display = paymentMode.value === "virement" ? "block" : "none";
-};
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-// soumission du formulaire
-document.getElementById("form").addEventListener("submit", e => {
-  e.preventDefault();
+    const mode = paymentMode.value;
+    const fileInput = document.getElementById("proof");
 
-  const data = new FormData(e.target);
+    if (mode === "virement" && fileInput.files.length === 0) {
+      alert("Veuillez joindre la preuve de paiement.");
+      return;
+    }
 
-  fetch(`/validate/${id}`, {
-    method: "POST",
-    body: data
-  })
-  .then(r => r.json())
-  .then(res => {
-    if (res.success) {
-      document.getElementById("form").style.display = "none";
-      document.getElementById("final").style.display = "block";
+    const formData = new FormData();
+    formData.append("paymentMode", mode);
+    if (fileInput.files[0]) {
+      formData.append("proof", fileInput.files[0]);
+    }
+
+    const res = await fetch(`/confirm/${id}`, {
+      method: "POST",
+      body: formData
+    });
+
+    if (res.ok) {
+      form.classList.add("hidden");
+      final.classList.remove("hidden");
     } else {
-      alert(res.message || "Erreur");
+      alert("Erreur lors de la confirmation.");
     }
   });
-});
 </script>
 
 </body>
