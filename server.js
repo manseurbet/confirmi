@@ -1,36 +1,100 @@
 const express = require("express");
-const path = require("path");
 const fs = require("fs");
+const path = require("path");
 const multer = require("multer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Créer le dossier uploads s'il n'existe pas
-const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-
-// Multer pour les uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname)
-});
-const upload = multer({ storage });
-
-// Pour lire le body des formulaires en JSON
+/* =========================
+   MIDDLEWARES
+========================= */
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Servir les fichiers statiques
 app.use(express.static(path.join(__dirname, "frontend")));
 
-// Charger les transactions
-const transactionsPath = path.join(__dirname, "transaction.json");
-let transactions = {};
-if (fs.existsSync(transactionsPath)) {
-  transactions = JSON.parse(fs.readFileSync(transactionsPath, "utf-8"));
+/* =========================
+   DOSSIERS & FICHIERS
+========================= */
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
+
+const transactionsFile = path.join(__dirname, "transactions.json");
+if (!fs.existsSync(transactionsFile)) {
+  fs.writeFileSync(transactionsFile, JSON.stringify([]));
 }
 
+/* =========================
+   MULTER – CONFIG PRO
+========================= */
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    let ext = "";
+
+    if (file.mimetype === "image/jpeg") ext = ".jpg";
+    else if (file.mimetype === "image/png") ext = ".png";
+    else if (file.mimetype === "application/pdf") ext = ".pdf";
+
+    cb(null, Date.now() + ext);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  const allowed = [
+    "image/jpeg",
+    "image/png",
+    "application/pdf"
+  ];
+
+  if (allowed.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Type de fichier non autorisé"), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5 MB
+});
+
+/* =========================
+   ROUTE VENDEUR
+========================= */
+app.post("/create-transaction", (req, res) => {
+  const { clientName, productRef, amount, description } = req.body;
+
+  if (!clientName || !productRef || !amount) {
+    return res.status(400).json({ success: false, message: "Données manquantes" });
+  }
+
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile));
+  const transactionId = Date.now();
+
+  const transaction = {
+    transactionId,
+    clientName,
+    productRef,
+    amount,
+    description,
+    paymentMethod: null,
+    attachment: null
+  };
+
+  transactions.push(transaction);
+  fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
+
+  const clientLink = `${req.protocol}://${req.get("host")}/client.html?id=${transactionId}`;
+
+  res.json({ success: true, clientLink });
+});
+
+/* =========================
+   ROUTE CLIENT – LECTURE
+========================= */
 // Endpoint pour récupérer une transaction
 app.get("/get-transaction/:id", (req, res) => {
   const id = req.params.id;
@@ -38,27 +102,44 @@ app.get("/get-transaction/:id", (req, res) => {
   if (!transaction) return res.json({ success: false });
   res.json({ success: true, transaction });
 });
-
-// Endpoint pour confirmer une transaction
-app.post("/confirm-transaction/:id", upload.single("attachment"), (req, res) => {
+/* =========================
+   ROUTE CLIENT – VALIDATION
+========================= */
+app.post("/confirm-transaction/:id", upload.single("attachment"), (req,res)=>{
   const id = req.params.id;
   const transaction = transactions[id];
-  if (!transaction) return res.json({ success: false, message: "Transaction introuvable" });
+  if(!transaction) return res.json({ success: false, message:"Transaction introuvable" });
 
-  if (transaction.confirmed) {
-    return res.json({ success: false, message: "Cette commande a déjà été confirmée." });
-  }
-
-  transaction.paymentMethod = req.body.paymentMethod || transaction.paymentMethod;
-  if (req.file) transaction.attachment = req.file.filename;
+  transaction.paymentMethod = req.body.paymentMethod;
+  if(req.file) transaction.attachment = req.file.filename;
   transaction.confirmed = true;
 
-  // Sauvegarder les transactions
-  fs.writeFileSync(transactionsPath, JSON.stringify(transactions, null, 2));
-
+  fs.writeFileSync("transaction.json", JSON.stringify(transactions, null, 2));
   res.json({ success: true });
-});
 
-// Lancer le serveur
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    }
+
+    if (paymentMethod !== "Especes" && !req.file) {
+      return res.status(400).json({ success: false });
+    }
+
+    transaction.paymentMethod = paymentMethod;
+
+    if (req.file) {
+      transaction.attachment = req.file.filename;
+      transaction.originalFilename = req.file.originalname;
+    }
+
+    fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
+
+    res.json({ success: true });
+  }
+);
+
+/* =========================
+   LANCEMENT SERVEUR
+========================= */
+app.listen(PORT, () => {
+  console.log(`✅ Confirmi en ligne : http://localhost:${PORT}`);
+});
 
