@@ -113,8 +113,18 @@ document.getElementById("clientForm").addEventListener("submit", async (e) => {
   const payment = paymentMethod.value;
   const file = attachment.files[0];
 
-  if(!payment){ alert("Veuillez choisir un mode de paiement."); return; }
-  if(payment !== "Especes" && !file){ alert("Veuillez joindre la pièce justificative."); return; }
+ if (!payment) {
+  alert("Veuillez choisir un mode de paiement.");
+  return;
+}
+
+if (payment !== "Especes") {
+  if (!file) {
+    alert("Veuillez joindre la pièce justificative.");
+    return;
+  }
+}
+
 
   const formData = new FormData();
   formData.append("paymentMethod", payment);
