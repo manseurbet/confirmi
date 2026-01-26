@@ -113,11 +113,27 @@ document.getElementById("clientForm").addEventListener("submit", async (e) => {
   const id = getTransactionId();
   if(!id) { alert("ID manquant"); return; }
 
-  const payment = paymentMethod.value;
-  const file = attachment.files[0];
+ const payment = document.getElementById("paymentMethod").value;
+const file = document.getElementById("paymentFile").files[0];
 
-  if(!payment){ alert("Veuillez choisir un mode de paiement."); return; }
-  if(payment !== "Especes" && !file){ alert("Veuillez joindre la pièce justificative."); return; }
+if (!payment) {
+  alert("Veuillez choisir un mode de paiement.");
+  return;
+}
+
+if (payment !== "Especes" && !file) {
+  alert("Veuillez joindre la pièce justificative.");
+  return;
+}
+
+// Ici, toutes les validations sont OK
+alert("Transaction enregistrée avec succès !");
+
+// Ensuite tu peux envoyer au serveur si nécessaire
+// fetch("/validate-transaction", {...})
+
+
+// Si paiement = "Especes", le code continue sans vérifier le fichier
 
   const formData = new FormData();
   formData.append("paymentMethod", payment);
