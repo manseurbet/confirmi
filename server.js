@@ -1,19 +1,10 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
-
-const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-
 const multer = require("multer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
-});
 
 /* =========================
    MIDDLEWARES
@@ -139,7 +130,7 @@ app.post(
     }
 
     if (paymentMethod !== "Especes" && !req.file) {
-      return res.status(400).json({ success: false });
+      return res.status(400).json({ success: false ;});
     }
 
     transaction.paymentMethod = paymentMethod;
