@@ -104,6 +104,23 @@ paymentMethod.addEventListener("change", () => {
 // --------------------
 // Submit et upload
 // --------------------
+const paymentSelect = document.getElementById("paymentMethod");
+const fileInput = document.getElementById("paymentFile");
+const fileLabel = document.getElementById("paymentFileLabel");
+
+paymentSelect.addEventListener("change", () => {
+  const value = paymentSelect.value.toLowerCase();
+
+  if (value === "especes") {
+    fileInput.value = "";          // vider le fichier
+    fileInput.disabled = true;     // désactiver
+    fileLabel.style.display = "none"; // cacher
+  } else {
+    fileInput.disabled = false;
+    fileLabel.style.display = "block"; // afficher
+  }
+});
+
 document.getElementById("clientForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
