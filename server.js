@@ -109,24 +109,18 @@ app.get("/transaction/:id", (req, res) => {
 /* =========================
    ROUTE CLIENT – VALIDATION
 ========================= */
-app.post(
-  "/confirm-transaction/:id",
-  upload.single("attachment"),
-  (req, res) => {
-    const { paymentMethod } = req.body;
-    const transactions = JSON.parse(fs.readFileSync(transactionsFile));
-    const transaction = transactions.find(t => t.transactionId == req.params.id);
+app.post("/confirm-transaction/:id", upload.single("attachment"), (req,res)=>{
+  const id = req.params.id;
+  const transaction = transactions[id];
+  if(!transaction) return res.json({ success: false, message:"Transaction introuvable" });
 
-    if (!transaction) {
-      return res.status(404).json({ success: false, message: "Transaction introuvable" });
-    }
+  transaction.paymentMethod = req.body.paymentMethod;
+  if(req.file) transaction.attachment = req.file.filename;
+  transaction.confirmed = true;
 
-    if (transaction.paymentMethod) {
-      return res.status(400).json({ success: false, message: "Transaction déjà validée" });
-    }
+  fs.writeFileSync("transaction.json", JSON.stringify(transactions, null, 2));
+  res.json({ success: true });
 
-    if (!paymentMethod) {
-      return res.status(400).json({ success: false, message: "Mode de paiement requis" });
     }
 
     if (paymentMethod !== "Especes" && !req.file) {
