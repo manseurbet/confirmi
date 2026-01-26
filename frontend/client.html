@@ -35,16 +35,18 @@ button:hover { background-color:#218838; }
     <input type="text" id="description" readonly>
   </label>
 
-  <label>Mode de paiement
+ <label>Mode de paiement
   <select id="paymentMethod" required>
-    <option value="cash">Espèces</option>
-    <option value="transfer">Virement</option>
+    <option value="">Choisir</option>
+    <option value="especes">Espèces</option>
+    <option value="virement">Virement</option>
+    <option value="cheque">Chèque</option>
   </select>
 </label>
 
-  <label id="attachmentLabel">Pièce justificative
-    <input type="file" id="attachment">
-  </label>
+<label id="uploadLabel">Pièce justificative
+  <input type="file" id="paymentFile">
+</label>
 
   <button type="submit">Confirmer la transaction</button>
 </form>
@@ -91,13 +93,14 @@ loadTransaction();
 // Validation dynamique
 // --------------------
 const paymentMethod = document.getElementById("paymentMethod");
-const attachment = document.getElementById("attachment");
+const uploadLabel = document.getElementById("uploadLabel");
 
 paymentMethod.addEventListener("change", () => {
-  if(paymentMethod.value === "Especes") {
-    attachment.removeAttribute("required");
+  if (paymentMethod.value === "especes") {
+    uploadLabel.style.display = "none";
+    document.getElementById("paymentFile").value = "";
   } else {
-    attachment.setAttribute("required", true);
+    uploadLabel.style.display = "block";
   }
 });
 
