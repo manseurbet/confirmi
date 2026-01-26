@@ -16,7 +16,7 @@ button:hover { background-color:#218838; }
 </head>
 <body>
 
-<h2>Formulaire Client</h2>
+<h2>Merci de confirmer votre commande via ce lien sécurisé Confirmi :</h2>
 
 <form id="clientForm" enctype="multipart/form-data">
   <label>Nom du client
@@ -36,104 +36,88 @@ button:hover { background-color:#218838; }
   </label>
 
  <label>Mode de paiement
-  <select id="paymentMethod" required>
-    <option value="">Choisir</option>
-    <option value="especes">Espèces</option>
-    <option value="virement">Virement</option>
-    <option value="cheque">Chèque</option>
-  </select>
-</label>
+    <select id="paymentMethod">
+      <option value="">-- Choisir --</option>
+      <option value="Especes">Espèces</option>
+      <option value="Virement">Virement</option>
+      <option value="Cheque">Chèque</option>
+    </select>
+  </label>
 
-<label id="uploadLabel">Pièce justificative
-  <input type="file" id="paymentFile">
-</label>
+  <label id="paymentFileLabel">Pièce justificative
+    <input type="file" id="paymentFile">
+  </label>
 
   <button type="submit">Confirmer la transaction</button>
 </form>
 
+<div id="message"></div>
+
 <script>
-// --------------------
-// Récupération transaction
-// --------------------
+// Récupérer l'ID de la transaction depuis l'URL
 function getTransactionId() {
   const params = new URLSearchParams(window.location.search);
   return params.get("id");
 }
 
-async function loadTransaction() {
+// Pré-remplissage du formulaire
+window.addEventListener("DOMContentLoaded", async () => {
   const id = getTransactionId();
-  if (!id) { alert("ID de transaction manquant !"); return; }
+  if (!id) return alert("ID de transaction manquant.");
 
   try {
-    const res = await fetch(`/transaction/${id}`);
+    const res = await fetch(`/get-transaction/${id}`);
     const data = await res.json();
-    if (!data.success) { alert("Transaction introuvable !"); return; }
+
+    if (!data.success) return alert("Transaction introuvable.");
 
     const t = data.transaction;
-    document.getElementById("clientName").value = t.clientName;
-    document.getElementById("productRef").value = t.productRef;
-    document.getElementById("amount").value = t.amount;
+    document.getElementById("clientName").value = t.clientName || "";
+    document.getElementById("productRef").value = t.productRef || "";
+    document.getElementById("amount").value = t.amount || "";
     document.getElementById("description").value = t.description || "";
+    document.getElementById("paymentMethod").value = t.paymentMethod || "";
+    
+    if (t.attachment) {
+      document.getElementById("paymentFileLabel").innerText = "Pièce déjà jointe";
+      document.getElementById("paymentFile").disabled = true;
+    }
 
-    // Si transaction déjà validée côté serveur, bloquer modification
-    if(t.paymentMethod){
-      document.getElementById("paymentMethod").value = t.paymentMethod;
+    // Si déjà validée, bloquer le formulaire
+    if (t.confirmed) {
       document.getElementById("paymentMethod").disabled = true;
+      document.getElementById("paymentFile").disabled = true;
+      document.querySelector("button[type=submit]").disabled = true;
+      document.getElementById("message").innerText = "Cette commande a déjà été confirmée. Aucune modification n’est possible.";
     }
 
   } catch (err) {
     console.error(err);
-    alert("Erreur lors du chargement de la transaction !");
-  }
-}
-
-loadTransaction();
-
-// --------------------
-// Validation dynamique
-// --------------------
-const paymentMethod = document.getElementById("paymentMethod");
-const uploadLabel = document.getElementById("uploadLabel");
-
-paymentMethod.addEventListener("change", () => {
-  if (paymentMethod.value === "especes") {
-    uploadLabel.style.display = "none";
-    document.getElementById("paymentFile").value = "";
-  } else {
-    uploadLabel.style.display = "block";
+    alert("Erreur lors du chargement de la transaction.");
   }
 });
 
-// --------------------
-// Submit et upload
-// --------------------
-<script>
+// Validation et envoi
 document.getElementById("clientForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const id = getTransactionId();
-  if(!id) { 
-    alert("ID manquant"); 
-    return; 
-  }
+  if(!id) { alert("ID manquant"); return; }
 
   const paymentMethodEl = document.getElementById("paymentMethod");
   const payment = paymentMethodEl.value;
   const file = document.getElementById("paymentFile").files[0];
 
-  // Validation du paiement
   if (!payment) {
     alert("Veuillez choisir un mode de paiement.");
     return;
   }
 
-  // Vérification du fichier seulement si paiement différent de Espèces
   if (payment !== "Especes" && !file) {
     alert("Veuillez joindre la pièce justificative.");
     return;
   }
 
-  // Création du FormData
   const formData = new FormData();
   formData.append("paymentMethod", payment);
   if(file) formData.append("attachment", file);
@@ -143,16 +127,18 @@ document.getElementById("clientForm").addEventListener("submit", async (e) => {
       method: "POST",
       body: formData
     });
-    
     const data = await res.json();
 
     if(data.success){
       alert("Transaction confirmée !");
-      paymentMethodEl.disabled = true; // bloquer le changement du mode de paiement
-      document.getElementById("paymentFile").disabled = true; // bloquer le fichier
+      paymentMethodEl.disabled = true;
+      document.getElementById("paymentFile").disabled = true;
+      document.querySelector("button[type=submit]").disabled = true;
+      document.getElementById("message").innerText = "Cette commande a déjà été confirmée. Aucune modification n’est possible.";
     } else {
       alert("Erreur : " + (data.message || "Transaction non confirmée"));
     }
+
   } catch(err){
     console.error(err);
     alert("Erreur lors de l'envoi de la transaction !");
@@ -160,11 +146,8 @@ document.getElementById("clientForm").addEventListener("submit", async (e) => {
 });
 </script>
 
-
 </body>
 </html>
-
-
 
 
 
