@@ -130,7 +130,7 @@ app.post(
     }
 
     if (paymentMethod !== "Especes" && !req.file) {
-      return res.status(400).json({ success: false, message: "Pièce justificative requise" });
+      return res.status(400).json({ success: false ;});
     }
 
     transaction.paymentMethod = paymentMethod;
