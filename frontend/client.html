@@ -16,7 +16,7 @@ button:hover { background-color:#218838; }
 </head>
 <body>
 
-<h2>Merci de confirmer votre commande via ce lien sécurisé Confirmi :</h2>
+<h2>Merci de confirmer votre commande via ce lien sécurisé "Confirmi" :</h2>
 
 <form id="clientForm" enctype="multipart/form-data">
   <label>Nom du client
@@ -36,11 +36,11 @@ button:hover { background-color:#218838; }
   </label>
 
   <label>Mode de paiement
-  <select id="paymentMethod" required>
-    <option value="cash">Espèces</option>
-    <option value="transfer">Virement</option>
-  </select>
-</label>
+    <select id="paymentMethod" required>
+      <option value="especes">Espèces</option>
+      <option value="transfer">Virement</option>
+    </select>
+  </label>
 
   <label id="attachmentLabel">Pièce justificative
     <input type="file" id="attachment">
@@ -73,10 +73,11 @@ async function loadTransaction() {
     document.getElementById("amount").value = t.amount;
     document.getElementById("description").value = t.description || "";
 
-    // Si transaction déjà validée côté serveur, bloquer modification
     if(t.paymentMethod){
-      document.getElementById("paymentMethod").value = t.paymentMethod;
-      document.getElementById("paymentMethod").disabled = true;
+      const pm = document.getElementById("paymentMethod");
+      pm.value = t.paymentMethod.toLowerCase();
+      pm.disabled = true;
+      document.getElementById("attachment").disabled = true;
     }
 
   } catch (err) {
@@ -88,60 +89,50 @@ async function loadTransaction() {
 loadTransaction();
 
 // --------------------
-// Validation dynamique
+// Gestion dynamique du champ pièce justificative
 // --------------------
-const paymentMethod = document.getElementById("paymentMethod");
+const paymentSelect = document.getElementById("paymentMethod");
 const attachment = document.getElementById("attachment");
+const attachmentLabel = document.getElementById("attachmentLabel");
 
-paymentMethod.addEventListener("change", () => {
-  if(paymentMethod.value === "Especes") {
-    attachment.removeAttribute("required");
+function toggleAttachment() {
+  if(paymentSelect.value.toLowerCase() === "especes") {
+    attachment.required = false;
+    attachment.value = "";
+    attachment.disabled = true;
+    attachmentLabel.style.display = "none";
   } else {
-    attachment.setAttribute("required", true);
+    attachment.required = true;
+    attachment.disabled = false;
+    attachmentLabel.style.display = "block";
   }
-});
+}
+
+// Exécution au changement
+paymentSelect.addEventListener("change", toggleAttachment);
+toggleAttachment(); // exécution au chargement
 
 // --------------------
 // Submit et upload
 // --------------------
-const paymentSelect = document.getElementById("paymentMethod");
-const fileInput = document.getElementById("paymentFile");
-const fileLabel = document.getElementById("paymentFileLabel");
-
-paymentSelect.addEventListener("change", () => {
-  const value = paymentSelect.value.toLowerCase();
-
-  if (value === "especes") {
-    fileInput.value = "";          // vider le fichier
-    fileInput.disabled = true;     // désactiver
-    fileLabel.style.display = "none"; // cacher
-  } else {
-    fileInput.disabled = false;
-    fileLabel.style.display = "block"; // afficher
-  }
-});
-
 document.getElementById("clientForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const id = getTransactionId();
   if(!id) { alert("ID manquant"); return; }
 
-  const payment = paymentMethod.value;
+  const payment = paymentSelect.value;
   const file = attachment.files[0];
 
- if (!payment) {
-  alert("Veuillez choisir un mode de paiement.");
-  return;
-}
+  if(!payment){
+    alert("Veuillez choisir un mode de paiement.");
+    return;
+  }
 
-if (payment .toLowerCase() !== "Especes") {
-  if (!file) {
+  if(payment.toLowerCase() !== "especes" && !file){
     alert("Veuillez joindre la pièce justificative.");
     return;
   }
-}
-
 
   const formData = new FormData();
   formData.append("paymentMethod", payment);
@@ -156,7 +147,8 @@ if (payment .toLowerCase() !== "Especes") {
 
     if(data.success){
       alert("Transaction confirmée !");
-      paymentMethod.disabled = true; // bloquer changement mode paiement
+      paymentSelect.disabled = true;
+      attachment.disabled = true;
     } else {
       alert("Erreur : " + data.message);
     }
@@ -169,6 +161,7 @@ if (payment .toLowerCase() !== "Especes") {
 
 </body>
 </html>
+
 
 
 

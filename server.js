@@ -113,38 +113,77 @@ app.post(
   "/confirm-transaction/:id",
   upload.single("attachment"),
   (req, res) => {
+
     const { paymentMethod } = req.body;
-    const transactions = JSON.parse(fs.readFileSync(transactionsFile));
-    const transaction = transactions.find(t => t.transactionId == req.params.id);
+    const transactions = JSON.parse(fs.readFileSync(transactionsFile, "utf8"));
+    const transaction = transactions.find(
+      t => t.transactionId == req.params.id
+    );
 
+    // 1️⃣ Transaction introuvable
     if (!transaction) {
-      return res.status(404).json({ success: false, message: "Transaction introuvable" });
+      return res.status(404).json({
+        success: false,
+        message: "Transaction introuvable"
+      });
     }
 
-    if (transaction.paymentMethod) {
-      return res.status(400).json({ success: false, message: "Transaction déjà validée" });
+    // 2️⃣ Déjà confirmée → STOP
+    if (transaction.confirmed === true) {
+      return res.json({
+        success: false,
+        message: "Cette commande a déjà été confirmée."
+      });
     }
 
+    // 3️⃣ Mode de paiement requis
     if (!paymentMethod) {
-      return res.status(400).json({ success: false, message: "Mode de paiement requis" });
+      return res.status(400).json({
+        success: false,
+        message: "Mode de paiement requis"
+      });
     }
 
-    if (paymentMethod !== "Especes" && !req.file) {
-      return res.status(400).json({ success: false });
+    // 4️⃣ Si pas espèces → fichier obligatoire
+    if (paymentMethod.toLowerCase() !== "especes" && !req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Pièce justificative requise"
+      });
     }
 
+    // 5️⃣ Validation
     transaction.paymentMethod = paymentMethod;
+    transaction.confirmed = true;
 
     if (req.file) {
       transaction.attachment = req.file.filename;
       transaction.originalFilename = req.file.originalname;
     }
 
-    fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
+    // 6️⃣ Sauvegarde
+    fs.writeFileSync(
+      transactionsFile,
+      JSON.stringify(transactions, null, 2)
+    );
 
     res.json({ success: true });
   }
 );
+
+app.get("/transactions", (req, res) => {
+  try {
+    const transactions = JSON.parse(
+      fs.readFileSync(transactionsFile, "utf8")
+    );
+    res.json({ success: true, transactions });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Erreur lecture transactions"
+    });
+  }
+});
 
 /* =========================
    LANCEMENT SERVEUR

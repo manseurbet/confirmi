@@ -1,51 +1,73 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Confirmi</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f6f8;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    h1 {
-      color: #007bff;
-    }
-    .buttons {
-      margin-top: 30px;
-      display: flex;
-      gap: 20px;
-    }
-    button {
-      padding: 12px 25px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      color: white;
-      background-color: #007bff;
-      transition: 0.3s;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Transactions - Confirmi</title>
+<style>
+body { font-family: Arial; background:#f5f6f8; padding:30px; }
+table { width:100%; border-collapse:collapse; background:#fff; }
+th, td { padding:10px; border:1px solid #ddd; text-align:left; }
+th { background:#eee; }
+.confirmed { color:green; font-weight:bold; }
+.pending { color:orange; font-weight:bold; }
+a { color:#007bff; text-decoration:none; }
+</style>
 </head>
 <body>
 
-  <h1>Bienvenue sur Confirmi</h1>
-  <p>Choisissez votre formulaire :</p>
+<h2>Liste des transactions</h2>
 
-  <div class="buttons">
-    <button onclick="location.href='vendeur.html'">Formulaire Vendeur</button>
-    <button onclick="location.href='client.html'">Formulaire Client</button>
-  </div>
+<table id="transactionsTable">
+  <thead>
+    <tr>
+      <th>Client</th>
+      <th>Produit</th>
+      <th>Montant</th>
+      <th>Paiement</th>
+      <th>Statut</th>
+      <th>Lien client</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+async function loadTransactions() {
+  const res = await fetch("/transactions");
+  const data = await res.json();
+
+  if (!data.success) {
+    alert("Erreur chargement transactions");
+    return;
+  }
+
+  const tbody = document.querySelector("#transactionsTable tbody");
+  tbody.innerHTML = "";
+
+  data.transactions.forEach(t => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${t.clientName || ""}</td>
+      <td>${t.productRef || ""}</td>
+      <td>${t.amount || ""}</td>
+      <td>${t.paymentMethod || "-"}</td>
+      <td class="${t.confirmed ? "confirmed" : "pending"}">
+        ${t.confirmed ? "Confirmée" : "En attente"}
+      </td>
+      <td>
+        <a href="/client.html?id=${t.transactionId}" target="_blank">
+          Ouvrir
+        </a>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
+loadTransactions();
+</script>
 
 </body>
 </html>
