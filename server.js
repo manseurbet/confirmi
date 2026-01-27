@@ -106,6 +106,17 @@ app.get("/transaction/:id", (req, res) => {
   res.json({ success: true, transaction });
 });
 
+app.get("/transactions", (req, res) => {
+  try {
+    const transactions = JSON.parse(fs.readFileSync("transactions.json"));
+    res.json({ success: true, transactions });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, transactions: [] });
+  }
+});
+
+
 /* =========================
    ROUTE CLIENT – VALIDATION
 ========================= */
