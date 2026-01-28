@@ -1,35 +1,46 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Liste des transactions - Confirmi</title>
-<style>
-  body { font-family: Arial, sans-serif; background: #f5f6f8; margin: 30px; }
-  h2 { text-align: center; margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-  th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-  th { background-color: #007bff; color: white; }
-  tr:hover { background-color: #f1f1f1; }
-</style>
+  <meta charset="UTF-8">
+  <title>Liste des transactions</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f6f8;
+      padding: 30px;
+    }
+    h2 { color: #007bff; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th { background: #007bff; color: white; }
+    a { color: #007bff; text-decoration: none; }
+  </style>
 </head>
 <body>
 
 <h2>Liste des transactions Confirmi</h2>
 
-<table id="transactionsTable">
+<table>
   <thead>
     <tr>
       <th>ID</th>
       <th>Client</th>
       <th>Produit</th>
       <th>Montant</th>
-      <th>Mode Paiement</th>
-      <th>Status</th>
+      <th>Mode paiement</th>
+      <th>Statut</th>
+      <th>Action</th>
     </tr>
   </thead>
-  <tbody>
-    <!-- Les lignes seront ajoutées par JS -->
-  </tbody>
+  <tbody id="transactionsBody"></tbody>
 </table>
 
 <script>
@@ -39,29 +50,32 @@ async function loadTransactions() {
     const data = await res.json();
 
     if (!data.success) {
-      alert("Erreur lors du chargement des transactions !");
+      alert('Erreur lors du chargement');
       return;
     }
 
-    const tbody = document.querySelector("#transactionsTable tbody");
-    tbody.innerHTML = "";
+    const tbody = document.getElementById('transactionsBody');
+    tbody.innerHTML = '';
 
     data.transactions.forEach(t => {
-      const tr = document.createElement("tr");
+      const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${t.transactionId}</td>
         <td>${t.clientName}</td>
         <td>${t.productRef}</td>
-        <td>${t.amount}</td>
-        <td>${t.paymentMethod || "-"}</td>
-        <td>${t.confirmed ? "Confirmée" : "En attente"}</td>
+        <td>${t.amount} DA</td>
+        <td>${t.paymentMethod || '-'}</td>
+        <td>${t.confirmed ? 'Confirmée' : 'En attente'}</td>
+        <td>
+          <a href="/client.html?id=${t.transactionId}" target="_blank">Voir</a>
+        </td>
       `;
       tbody.appendChild(tr);
     });
 
-  } catch (err) {
-    console.error(err);
-    alert("Erreur lors du chargement des transactions !");
+  } catch (e) {
+    console.error(e);
+    alert('Erreur serveur');
   }
 }
 

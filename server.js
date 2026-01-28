@@ -15,15 +15,6 @@ app.use(express.static(path.join(__dirname, "frontend")));
 /* =========================
    ROUTE GET TRANSACTIONS
 ========================= */
-app.get("/transactions", (req, res) => {
-  try {
-    const transactions = JSON.parse(fs.readFileSync("transactions.json"));
-    res.json({ success: true, transactions });
-  } catch (err) {
-    console.error(err);
-    res.json({ success: false, transactions: [] });
-  }
-});
 
 /* =========================
    DOSSIERS & FICHIERS

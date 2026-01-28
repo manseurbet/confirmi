@@ -1,72 +1,46 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Liste des transactions - Confirmi</title>
-<style>
-  body { font-family: Arial, sans-serif; background: #f5f6f8; margin: 30px; }
-  h2 { text-align: center; margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-  th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-  th { background-color: #007bff; color: white; }
-  tr:hover { background-color: #f1f1f1; }
-</style>
+  <meta charset="UTF-8">
+  <title>Confirmi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f6f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 { color: #007bff; }
+    .buttons {
+      margin-top: 30px;
+      display: flex;
+      gap: 20px;
+    }
+    button {
+      padding: 12px 25px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      background-color: #007bff;
+    }
+    button:hover { background-color: #0056b3; }
+  </style>
 </head>
 <body>
 
-<h2>Liste des transactions Confirmi</h2>
+  <h1>Bienvenue sur Confirmi</h1>
+  <p>Choisissez une action :</p>
 
-<table id="transactionsTable">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Client</th>
-      <th>Produit</th>
-      <th>Montant</th>
-      <th>Mode Paiement</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- Les lignes seront ajoutées par JS -->
-  </tbody>
-</table>
-
-<script>
-async function loadTransactions() {
-  try {
-    const res = await fetch('/transactions');
-    const data = await res.json();
-
-    if (!data.success) {
-      alert("Erreur lors du chargement des transactions !");
-      return;
-    }
-
-    const tbody = document.querySelector("#transactionsTable tbody");
-    tbody.innerHTML = "";
-
-    data.transactions.forEach(t => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${t.transactionId}</td>
-        <td>${t.clientName}</td>
-        <td>${t.productRef}</td>
-        <td>${t.amount}</td>
-        <td>${t.paymentMethod || "-"}</td>
-        <td>${t.confirmed ? "Confirmée" : "En attente"}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-  } catch (err) {
-    console.error(err);
-    alert("Erreur lors du chargement des transactions !");
-  }
-}
-
-loadTransactions();
-</script>
+  <div class="buttons">
+    <button onclick="location.href='vendeur.html'">Formulaire Vendeur</button>
+    <button onclick="location.href='transactions.html'">Voir les transactions</button>
+  </div>
 
 </body>
 </html>
