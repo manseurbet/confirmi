@@ -88,32 +88,43 @@ button:hover {
 </style>
 </head>
 <body>
-<h2>Création de commande</h2>
 
-<form id="vendorForm">
+<!-- =========================
+     Titre
+========================= -->
+<h2>Formulaire Vendeur</h2>
+
+<!-- =========================
+     Formulaire pour créer une transaction
+========================= -->
+<form id="vendeurForm" enctype="multipart/form-data">
+
   <label>Nom du client
-    <input type="text" id="clientName" required>
+    <input type="text" id="clientName" placeholder="Ex: Ali" required>
   </label>
 
   <label>Référence produit
-    <input type="text" id="productRef" required>
+    <input type="text" id="productRef" placeholder="Ex: PRD123" required>
   </label>
 
   <label>Montant
-    <input type="number" id="amount" required>
+    <input type="number" id="amount" placeholder="Ex: 1000" required>
   </label>
 
   <label>Description
-    <input type="text" id="description">
+    <textarea id="description" placeholder="Description du produit"></textarea>
+  </label>
+
+  <label>Mode de paiement
+    <select id="paymentMethod" required>
+      <option value="transfer">Virement</option>
+      <option value="Especes">Espèces</option>
+    </select>
   </label>
 
   <button type="submit">Créer la transaction</button>
 </form>
 
-<br>
-<label>Lien client
-  <input type="text" id="clientLink" readonly style="width:100%">
-</label>
 
 <script>
 // --------------------
