@@ -2,74 +2,71 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Formulaire Vendeur</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liste des transactions Confirmi</title>
 <style>
+/* =========================
+   Global & Base
+========================= */
 body {
   font-family: Arial, sans-serif;
   background: #f5f6f8;
-  margin: 0;
-  padding: 30px;
+  padding: 15px;
 }
 
 h2 {
   text-align: center;
   margin-bottom: 20px;
+  font-size: 20px;
 }
 
-form {
-  max-width: 500px;
+/* =========================
+   Tableau responsive
+========================= */
+table {
+  width: 100%;
+  border-collapse: collapse;
   margin: auto;
-  background: #ffffff;
-  padding: 25px;
-  border-radius: 10px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-label {
-  display: block;
-  margin-top: 15px;
-  font-weight: bold;
-}
-
-input, select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
+th, td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
   font-size: 14px;
 }
 
-input[readonly] {
-  background-color: #eeeeee;
-  color: #555;
-}
-
-button {
-  width: 100%;
-  margin-top: 25px;
-  padding: 12px;
+th {
   background-color: #007bff;
   color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
 }
 
-button:hover {
-  background-color: #0056b3;
+tr:nth-child(even) {
+  background-color: #f9f9f9;
 }
-#clientLink {
-  margin-top: 10px;
-  font-weight: bold;
+
+a {
+  color: #007bff;
+  text-decoration: none;
 }
-/* Responsive mobile */
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   Responsive mobile
+========================= */
 @media (max-width: 600px) {
+  th, td {
+    padding: 10px 5px;
+    font-size: 12px;
+  }
   h2 { font-size: 18px; }
-  input, select, textarea { font-size: 18px; }
-  button { font-size: 20px; padding: 16px; }
 }
 </style>
 </head>
