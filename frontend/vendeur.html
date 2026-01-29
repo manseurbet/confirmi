@@ -2,71 +2,69 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Liste des transactions Confirmi</title>
+<title>Formulaire Vendeur</title>
 <style>
-/* =========================
-   Global & Base
-========================= */
 body {
   font-family: Arial, sans-serif;
   background: #f5f6f8;
-  padding: 15px;
+  margin: 0;
+  padding: 30px;
 }
 
 h2 {
   text-align: center;
   margin-bottom: 20px;
-  font-size: 20px;
 }
 
-/* =========================
-   Tableau responsive
-========================= */
-table {
-  width: 100%;
-  border-collapse: collapse;
+form {
+  max-width: 500px;
   margin: auto;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-th, td {
-  padding: 12px 10px;
-  border-bottom: 1px solid #ddd;
-  text-align: center;
+label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
   font-size: 14px;
 }
 
-th {
+input[readonly] {
+  background-color: #eeeeee;
+  color: #555;
+}
+
+button {
+  width: 100%;
+  margin-top: 25px;
+  padding: 12px;
   background-color: #007bff;
   color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-tr:nth-child(even) {
-  background-color: #f9f9f9;
+button:hover {
+  background-color: #0056b3;
 }
 
-a {
-  color: #007bff;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-/* =========================
-   Responsive mobile
-========================= */
-@media (max-width: 600px) {
-  th, td {
-    padding: 10px 5px;
-    font-size: 12px;
-  }
-  h2 { font-size: 18px; }
+#clientLink {
+  margin-top: 10px;
+  font-weight: bold;
 }
 </style>
 </head>
