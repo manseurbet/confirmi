@@ -3,19 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <title>Formulaire Client</title>
+<!-- Pour que la page s'adapte aux écrans mobiles -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body { font-family: Arial, sans-serif; background: #f5f6f8; margin:0; padding:30px; }
-h2 { text-align:center; margin-bottom:20px; }
-form { max-width:500px; margin:auto; background:#fff; padding:25px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
-label { display:block; margin-top:15px; font-weight:bold; }
-input, select { width:100%; padding:10px; margin-top:6px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; font-size:14px; }
-input[readonly] { background:#eee; color:#555; }
-button { width:100%; margin-top:25px; padding:12px; background-color:#28a745; color:white; border:none; border-radius:8px; font-size:16px; cursor:pointer; }
-button:hover { background-color:#218838; }
+/* =======================
+   Styles généraux
+======================= */
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f6f8;
+  margin: 0;
+  padding: 20px;
+}
+
+/* Titre centré */
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.4em;
+}
+
+/* Formulaire centré et responsive */
+form {
+  max-width: 500px;
+  margin: auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Labels et champs */
+label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+/* Champs readonly */
+input[readonly] {
+  background: #eee;
+  color: #555;
+}
+
+/* Bouton */
+button {
+  width: 100%;
+  margin-top: 25px;
+  padding: 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background-color: #218838;
+}
+
+/* =======================
+   Adaptation Mobile
+======================= */
+@media (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+
+  form {
+    padding: 15px;
+  }
+
+  h2 {
+    font-size: 1.2em;
+  }
+
+  input, select, button {
+    font-size: 14px;
+    padding: 8px;
+  }
+}
 </style>
 </head>
 <body>
-
 <h2>Merci de confirmer votre commande via ce lien sécurisé "Confirmi" :</h2>
 
 <form id="clientForm" enctype="multipart/form-data">
