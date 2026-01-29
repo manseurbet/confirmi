@@ -1,239 +1,145 @@
- <!DOCTYPE html>
- <html lang="fr">
- <head>
- <meta charset="UTF-8">
- <title>Confirmi - Vendeur & Client</title>
- <style>
- body {
-   font-family: Arial, sans-serif;
-   background: #f5f6f8;
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Formulaire Vendeur</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f6f8;
   margin: 0;
   padding: 30px;
- }
+}
 
- h2 {
-   text-align: center;
-   margin-bottom: 20px;
- }
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
 
- form {
-   max-width: 500px;
-   margin: auto;
-   background: #ffffff;
-   padding: 25px;
-   border-radius: 10px;
-   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
- }
+form {
+  max-width: 500px;
+  margin: auto;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
 
- label {
-   display: block;
-   margin-top: 15px;
-   font-weight: bold;
- }
+label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+}
 
- input, select {
-   width: 100%;
-   padding: 10px;
-   margin-top: 6px;
-   border-radius: 6px;
-   border: 1px solid #ccc;
-   box-sizing: border-box;
-   font-size: 14px;
- }
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-size: 14px;
+}
 
- input[readonly] {
-   background-color: #eeeeee;
-   color: #555;
- }
+input[readonly] {
+  background-color: #eeeeee;
+  color: #555;
+}
 
- button {
-   width: 100%;
-   margin-top: 25px;
-   padding: 12px;
-   background-color: #007bff;
-   color: white;
-   border: none;
-   border-radius: 8px;
-   font-size: 16px;
-   cursor: pointer;
- }
+button {
+  width: 100%;
+  margin-top: 25px;
+  padding: 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
 
- button:hover {
-   background-color: #0056b3;
- }
+button:hover {
+  background-color: #0056b3;
+}
 
- #clientLink {
-   margin-top: 10px;
-   font-weight: bold;
- }
- </style>
- </head>
- <body>
+#clientLink {
+  margin-top: 10px;
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
 
- <h2>Création de transaction - Vendeur</h2>
+<h2>Création de commande</h2>
 
- <form id="vendorForm">
-   <label>Nom du client
-     <input type="text" id="clientName" required>
-   </label>
+<form id="vendorForm">
+  <label>Nom du client
+    <input type="text" id="clientName" required>
+  </label>
 
-   <label>Référence produit
-     <input type="text" id="productRef" required>
-   </label>
+  <label>Référence produit
+    <input type="text" id="productRef" required>
+  </label>
 
-   <label>Montant
-     <input type="number" id="amount" required>
-   </label>
+  <label>Montant
+    <input type="number" id="amount" required>
+  </label>
 
-   <label>Description
-     <input type="text" id="description">
-   </label>
+  <label>Description
+    <input type="text" id="description">
+  </label>
 
-   <button type="submit">Créer la transaction</button>
- </form>
+  <button type="submit">Créer la transaction</button>
+</form>
 
- <br>
- <label>Lien client
-   <input type="text" id="clientLink" readonly style="width:100%">
- </label>
+<br>
+<label>Lien client
+  <input type="text" id="clientLink" readonly style="width:100%">
+</label>
 
- <h2>Formulaire Client</h2>
- <form id="formClient">
-   <label>Nom du client
-     <input type="text" id="cName" required>
-   </label>
+<script>
+// --------------------
+// Constantes champs
+// --------------------
+const clientName = document.getElementById("clientName");
+const productRef = document.getElementById("productRef");
+const amount = document.getElementById("amount");
+const description = document.getElementById("description");
+const clientLinkField = document.getElementById("clientLink");
 
-   <label>Mode de paiement
-     <select id="paymentMode" required>
-       <option value="">-- Sélectionnez --</option>
-       <option value="espece">Espèce</option>
-       <option value="carte">Carte</option>
-       <option value="virement">Virement</option>
-     </select>
-   </label>
+// --------------------
+// Form submit
+// --------------------
+document.getElementById("vendorForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-   <label>Pièce justificative
-     <input type="file" id="paymentProof">
-   </label>
-
-   <fieldset>
-     <legend>Infos vendeur liées</legend>
-     <p id="linkedVendor">Aucune transaction pour le moment.</p>
-   </fieldset>
-
-  <button type="submit">Envoyer Client</button>
- </form>
-
- <script>
- // --------------------
- // Champs vendeur
- // --------------------
- const clientName = document.getElementById("clientName");
- const productRef = document.getElementById("productRef");
- const amount = document.getElementById("amount");
- const description = document.getElementById("description");
- const clientLinkField = document.getElementById("clientLink");
-
- let lastVendorTransaction = null; // stocke la dernière transaction pour que le client récupère
-
- // --------------------
- // Soumission vendeur
- // --------------------
- document.getElementById("vendorForm").addEventListener("submit", async (e) => {
-   e.preventDefault();
-
-   try {
-     const res = await fetch("/create-transaction", {
-       method: "POST",
-       headers: { "Content-Type": "application/json" },
-       body: JSON.stringify({
-         clientName: clientName.value,
+  try {
+    const res = await fetch("/create-transaction", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clientName: clientName.value,
         productRef: productRef.value,
-         amount: amount.value,
-         description: description.value
-       })
-     });
+        amount: amount.value,
+        description: description.value
+      })
+    });
 
-     const data = await res.json();
+    const data = await res.json();
 
-     if (data.success) {
-       clientLinkField.value = data.clientLink;
-       alert("Transaction créée ! Copiez le lien pour le client.");
-       lastVendorTransaction = {
-         clientName: clientName.value,
-         productRef: productRef.value,
-         amount: amount.value,
-         description: description.value,
-         clientLink: data.clientLink
-       };
-
-       // Afficher dans le formulaire client
-       document.getElementById("linkedVendor").textContent =
-         `Nom client: ${lastVendorTransaction.clientName}, Produit: ${lastVendorTransaction.productRef}, Montant: ${lastVendorTransaction.amount}`;
-
-       document.getElementById("vendorForm").reset();
-     } else {
-       alert("Erreur lors de la création de la transaction.");
-     }
-   } catch (err) {
-     alert("Erreur serveur : " + err);
-   }
- });
-
- // --------------------
- // Soumission client
- // --------------------
- const formC = document.getElementById("formClient");
- const paymentMode = document.getElementById("paymentMode");
- const paymentProof = document.getElementById("paymentProof");
- const clientPayments = {};
-
- formC.addEventListener("submit", (e) => {
-   e.preventDefault();
-
-   // Champs requis
-   if (!formC.checkValidity()) {
-     alert("Veuillez remplir tous les champs requis pour le client !");
-     return;
-   }
-
-   const mode = paymentMode.value;
-
-   // Paiement déjà enregistré
-   if (clientPayments[mode]) {
-     alert(`Le paiement par ${mode} a déjà été enregistré.`);
-     return;
-   }
-
-   // Pièce justificative pour espèces
-   if (mode === "espece" && !paymentProof.files.length) {
-     alert("Veuillez joindre une pièce justificative pour le paiement en espèces !");
-     paymentProof.focus();
-     return;
-   }
-
-   // Vérifier qu'une transaction vendeur existe
-   if (!lastVendorTransaction) {
-    alert("Aucune transaction vendeur disponible. Veuillez d'abord créer une transaction.");
-    return;
+    if (data.success) {
+      clientLinkField.value = data.clientLink;
+      alert("Transaction créée !\nCopiez le lien pour le client.");
+      // Facultatif : ouvre automatiquement le lien
+      // window.open(data.clientLink, "_blank");
+    } else {
+      alert("Erreur lors de la création de la transaction.");
+    }
+  } catch (err) {
+    alert("Erreur serveur : " + err);
   }
+});
+</script>
 
-   // Tout est ok → mémoriser paiement client
-   clientPayments[mode] = true;
-
-   const clientData = {
-     paymentMode: mode,
-     paymentProof: paymentProof.files.length ? paymentProof.files[0].name : null,
-     vendorTransaction: lastVendorTransaction
-   };
-
-   console.log("Client enregistré :", clientData);
-   alert("Client enregistré avec succès !");
-   formC.reset();
-   document.getElementById("linkedVendor").textContent = "Aucune transaction pour le moment.";
-   lastVendorTransaction = null; // reset pour la prochaine transaction
- });
- </script>
-
- </body>
- </html>
+</body>
+</html>
