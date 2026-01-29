@@ -2,27 +2,37 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Formulaire Vendeur</title>
 <style>
+/* =========================
+   Global & Base
+========================= */
 body {
   font-family: Arial, sans-serif;
   background: #f5f6f8;
   margin: 0;
-  padding: 30px;
+  padding: 15px;
 }
 
 h2 {
   text-align: center;
   margin-bottom: 20px;
+  font-size: 20px;
 }
 
+/* =========================
+   Formulaire
+========================= */
 form {
   max-width: 500px;
+  width: 90%;
   margin: auto;
-  background: #ffffff;
-  padding: 25px;
+  background: #fff;
+  padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-sizing: border-box;
 }
 
 label {
@@ -33,28 +43,35 @@ label {
 
 input, select {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin-top: 6px;
   border-radius: 6px;
   border: 1px solid #ccc;
+  font-size: 16px;
   box-sizing: border-box;
-  font-size: 14px;
 }
 
-input[readonly] {
-  background-color: #eeeeee;
-  color: #555;
+textarea {
+  width: 100%;
+  padding: 12px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  box-sizing: border-box;
+  resize: vertical;
 }
 
+/* Bouton */
 button {
   width: 100%;
   margin-top: 25px;
-  padding: 12px;
+  padding: 14px;
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 18px;
   cursor: pointer;
 }
 
@@ -62,86 +79,100 @@ button:hover {
   background-color: #0056b3;
 }
 
-#clientLink {
-  margin-top: 10px;
-  font-weight: bold;
-}
+/* Responsive mobile */
 @media (max-width: 600px) {
   h2 { font-size: 18px; }
-  input, select { font-size: 18px; }
+  input, select, textarea { font-size: 18px; }
   button { font-size: 20px; padding: 16px; }
 }
 </style>
 </head>
 <body>
 
-<h2>Création de commande</h2>
+<!-- =========================
+     Titre
+========================= -->
+<h2>Formulaire Vendeur</h2>
 
-<form id="vendorForm">
+<!-- =========================
+     Formulaire pour créer une transaction
+========================= -->
+<form id="vendeurForm" enctype="multipart/form-data">
+
   <label>Nom du client
-    <input type="text" id="clientName" required>
+    <input type="text" id="clientName" placeholder="Ex: Ali" required>
   </label>
 
   <label>Référence produit
-    <input type="text" id="productRef" required>
+    <input type="text" id="productRef" placeholder="Ex: PRD123" required>
   </label>
 
   <label>Montant
-    <input type="number" id="amount" required>
+    <input type="number" id="amount" placeholder="Ex: 1000" required>
   </label>
 
   <label>Description
-    <input type="text" id="description">
+    <textarea id="description" placeholder="Description du produit"></textarea>
+  </label>
+
+  <label>Mode de paiement
+    <select id="paymentMethod" required>
+      <option value="transfer">Virement</option>
+      <option value="Especes">Espèces</option>
+    </select>
   </label>
 
   <button type="submit">Créer la transaction</button>
 </form>
 
-<br>
-<label>Lien client
-  <input type="text" id="clientLink" readonly style="width:100%">
-</label>
-
 <script>
-// --------------------
-// Constantes champs
-// --------------------
-const clientName = document.getElementById("clientName");
-const productRef = document.getElementById("productRef");
-const amount = document.getElementById("amount");
-const description = document.getElementById("description");
-const clientLinkField = document.getElementById("clientLink");
+/* =========================
+   Submit formulaire vendeur
+========================= */
+document.getElementById("vendeurForm").addEventListener("submit", async (e) => {
+  e.preventDefault(); // empêcher le rechargement
 
-// --------------------
-// Form submit
-// --------------------
-document.getElementById("vendorForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+  // Récupérer les valeurs
+  const clientName = document.getElementById("clientName").value.trim();
+  const productRef = document.getElementById("productRef").value.trim();
+  const amount = document.getElementById("amount").value;
+  const description = document.getElementById("description").value.trim();
+  const paymentMethod = document.getElementById("paymentMethod").value;
+
+  // Validation simple
+  if (!clientName || !productRef || !amount) {
+    alert("Veuillez remplir tous les champs obligatoires.");
+    return;
+  }
+
+  // Préparer les données à envoyer au serveur
+  const data = {
+    clientName,
+    productRef,
+    amount,
+    description,
+    paymentMethod
+  };
 
   try {
-    const res = await fetch("/create-transaction", {
+    // Envoyer au serveur
+    const res = await fetch("/add-transaction", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        clientName: clientName.value,
-        productRef: productRef.value,
-        amount: amount.value,
-        description: description.value
-      })
+      body: JSON.stringify(data)
     });
+    const result = await res.json();
 
-    const data = await res.json();
-
-    if (data.success) {
-      clientLinkField.value = data.clientLink;
-      alert("Transaction créée !\nCopiez le lien pour le client.");
-      // Facultatif : ouvre automatiquement le lien
-      // window.open(data.clientLink, "_blank");
+    if(result.success) {
+      alert("Transaction créée avec succès !");
+      // Vider le formulaire
+      document.getElementById("vendeurForm").reset();
     } else {
-      alert("Erreur lors de la création de la transaction.");
+      alert("Erreur : " + result.message);
     }
-  } catch (err) {
-    alert("Erreur serveur : " + err);
+  } catch(err) {
+    console.error(err);
+    alert("Erreur lors de l'envoi de la transaction !");
   }
 });
 </script>
