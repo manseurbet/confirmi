@@ -4,6 +4,18 @@
   <meta charset="UTF-8">
   <title>Confirmi</title>
   <style>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("admin") !== "1") {
+    document.body.innerHTML = `
+      <div style="font-family:Arial;text-align:center;padding:40px">
+        <h2>Accès réservé à l’administrateur</h2>
+        <p>Cette page n’est pas accessible au public.</p>
+      </div>
+    `;
+  }
+</script>
+
     body {
       font-family: Arial, sans-serif;
       background: #f5f6f8;
