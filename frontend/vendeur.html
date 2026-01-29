@@ -3,12 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <title>Formulaire Vendeur</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+/* =========================
+   Styles généraux
+========================= */
 body {
   font-family: Arial, sans-serif;
   background: #f5f6f8;
   margin: 0;
-  padding: 30px;
+  padding: 20px;
 }
 
 h2 {
@@ -19,8 +23,8 @@ h2 {
 form {
   max-width: 500px;
   margin: auto;
-  background: #ffffff;
-  padding: 25px;
+  background: #fff;
+  padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
@@ -31,7 +35,7 @@ label {
   font-weight: bold;
 }
 
-input, select {
+input, textarea {
   width: 100%;
   padding: 10px;
   margin-top: 6px;
@@ -39,11 +43,6 @@ input, select {
   border: 1px solid #ccc;
   box-sizing: border-box;
   font-size: 14px;
-}
-
-input[readonly] {
-  background-color: #eeeeee;
-  color: #555;
 }
 
 button {
@@ -62,84 +61,92 @@ button:hover {
   background-color: #0056b3;
 }
 
-#clientLink {
-  margin-top: 10px;
-  font-weight: bold;
+/* =========================
+   Mobile
+========================= */
+@media (max-width: 600px) {
+  body { padding: 10px; }
+  form { padding: 15px; }
+  input, textarea, button { font-size: 15px; }
 }
 </style>
 </head>
 <body>
 
-<h2>Création de commande</h2>
+<h2>Formulaire Vendeur - Confirmi</h2>
 
 <form id="vendorForm">
   <label>Nom du client
-    <input type="text" id="clientName" required>
+    <input type="text" id="clientName" placeholder="Nom du client" required>
   </label>
 
   <label>Référence produit
-    <input type="text" id="productRef" required>
+    <input type="text" id="productRef" placeholder="Référence produit" required>
   </label>
 
   <label>Montant
-    <input type="number" id="amount" required>
+    <input type="number" id="amount" placeholder="Montant" required>
   </label>
 
   <label>Description
-    <input type="text" id="description">
+    <textarea id="description" placeholder="Description du produit"></textarea>
   </label>
 
-  <button type="submit">Créer la transaction</button>
+  <button type="submit">Générer le lien client</button>
 </form>
 
-<br>
-<label>Lien client
-  <input type="text" id="clientLink" readonly style="width:100%">
-</label>
+<!-- Affichage du lien généré -->
+<div id="clientLinkContainer" style="max-width:500px; margin:20px auto; text-align:center; display:none;">
+  <p>Lien à envoyer au client :</p>
+  <a id="clientLink" href="#" target="_blank" style="word-break: break-all;"></a>
+</div>
 
 <script>
 // --------------------
-// Constantes champs
-// --------------------
-const clientName = document.getElementById("clientName");
-const productRef = document.getElementById("productRef");
-const amount = document.getElementById("amount");
-const description = document.getElementById("description");
-const clientLinkField = document.getElementById("clientLink");
-
-// --------------------
-// Form submit
+// Submit et génération du lien client
 // --------------------
 document.getElementById("vendorForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  const clientName = document.getElementById("clientName").value.trim();
+  const productRef = document.getElementById("productRef").value.trim();
+  const amount = document.getElementById("amount").value.trim();
+  const description = document.getElementById("description").value.trim();
+
+  if(!clientName || !productRef || !amount){
+    alert("Veuillez remplir tous les champs obligatoires !");
+    return;
+  }
+
   try {
-    const res = await fetch("/create-transaction", {
+    const res = await fetch("/add-transaction", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        clientName: clientName.value,
-        productRef: productRef.value,
-        amount: amount.value,
-        description: description.value
-      })
+      body: JSON.stringify({ clientName, productRef, amount, description })
     });
 
     const data = await res.json();
 
-    if (data.success) {
-      clientLinkField.value = data.clientLink;
-      alert("Transaction créée !\nCopiez le lien pour le client.");
-      // Facultatif : ouvre automatiquement le lien
-      // window.open(data.clientLink, "_blank");
+    if(data.success){
+      const linkContainer = document.getElementById("clientLinkContainer");
+      const clientLink = document.getElementById("clientLink");
+      clientLink.href = `/client.html?id=${data.transactionId}`;
+      clientLink.textContent = clientLink.href;
+      linkContainer.style.display = "block";
+
+      alert("Lien généré avec succès !");
+      document.getElementById("vendorForm").reset();
     } else {
-      alert("Erreur lors de la création de la transaction.");
+      alert("Erreur : " + data.message);
     }
-  } catch (err) {
-    alert("Erreur serveur : " + err);
+
+  } catch(err){
+    console.error(err);
+    alert("Erreur lors de la création de la transaction !");
   }
 });
 </script>
 
 </body>
 </html>
+
