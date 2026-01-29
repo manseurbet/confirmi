@@ -2,27 +2,37 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Formulaire Vendeur</title>
 <style>
+/* =========================
+   Global & Base
+========================= */
 body {
   font-family: Arial, sans-serif;
   background: #f5f6f8;
   margin: 0;
-  padding: 30px;
+  padding: 15px;
 }
 
 h2 {
   text-align: center;
   margin-bottom: 20px;
+  font-size: 20px;
 }
 
+/* =========================
+   Formulaire
+========================= */
 form {
   max-width: 500px;
+  width: 90%;
   margin: auto;
-  background: #ffffff;
-  padding: 25px;
+  background: #fff;
+  padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-sizing: border-box;
 }
 
 label {
@@ -33,28 +43,35 @@ label {
 
 input, select {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin-top: 6px;
   border-radius: 6px;
   border: 1px solid #ccc;
+  font-size: 16px;
   box-sizing: border-box;
-  font-size: 14px;
 }
 
-input[readonly] {
-  background-color: #eeeeee;
-  color: #555;
+textarea {
+  width: 100%;
+  padding: 12px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  box-sizing: border-box;
+  resize: vertical;
 }
 
+/* Bouton */
 button {
   width: 100%;
   margin-top: 25px;
-  padding: 12px;
+  padding: 14px;
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 18px;
   cursor: pointer;
 }
 
@@ -62,14 +79,15 @@ button:hover {
   background-color: #0056b3;
 }
 
-#clientLink {
-  margin-top: 10px;
-  font-weight: bold;
+/* Responsive mobile */
+@media (max-width: 600px) {
+  h2 { font-size: 18px; }
+  input, select, textarea { font-size: 18px; }
+  button { font-size: 20px; padding: 16px; }
 }
 </style>
 </head>
 <body>
-
 <h2>Création de commande</h2>
 
 <form id="vendorForm">
