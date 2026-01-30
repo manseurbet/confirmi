@@ -11,10 +11,7 @@ const PORT = process.env.PORT || 3000;
 ========================= */
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "frontend")));
-
-/* =========================
-   ROUTE GET TRANSACTIONS
-========================= */
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* =========================
    DOSSIERS & FICHIERS
