@@ -30,6 +30,52 @@
       background-color: #007bff;
     }
     button:hover { background-color: #0056b3; }
+/* =========================
+   MODE TÉLÉPHONE
+========================= */
+@media (max-width: 700px) {
+
+  body {
+    padding: 10px;
+  }
+
+  h2 {
+    text-align: center;
+    font-size: 18px;
+  }
+
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    margin-bottom: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    padding: 10px;
+  }
+
+  td {
+    text-align: left;
+    padding: 6px 10px;
+    border: none;
+    position: relative;
+  }
+
+  td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: block;
+    color: #555;
+    margin-bottom: 2px;
+  }
+}
+
   </style>
 </head>
 <body>

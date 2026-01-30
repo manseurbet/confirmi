@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Confirmi Simple Prototype</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .transaction { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
+    .message-confiance { color: green; font-style: italic; }
+    button { margin-top: 5px; }
+    small { display: block; color: #666; margin-top: 5px; }
+  </style>
+</head>
+<body>
+
+<h2>Confirmi Simple Prototype</h2>
+
+<div id="transactions-container"></div>
+
+<script>
+  // ==== Données fictives ====
+  const transactions = [
+    { id: "CONF-2026-014", montant: 125000, reference: "CONF-2026-014", statut: "en_attente", preuve: null, date_creation: "2026-01-29T12:00:00", date_maj: null },
+    { id: "CONF-2026-015", montant: 80000, reference: "CONF-2026-015", statut: "en_attente", preuve: null, date_creation: "2026-01-29T12:05:00", date_maj: null }
+  ];
+
+  // ==== Labels pour les statuts ====
+  const statutLabels = {
+    en_attente: "En attente de règlement",
+    reglement_initie: "Règlement initié",
+    reglement_valide: "Règlement validé",
+    reglement_refuse: "Règlement refusé"
+  };
+
+  // ==== Fonction pour afficher les transactions ====
+  function renderTransactions() {
+    const container = document.getElementById("transactions-container");
+    container.innerHTML = "";
+
+    transactions.forEach(t => {
+      const div = document.createElement("div");
+      div.className = "transaction";
+      div.id = `transaction-${t.id}`;
+      div.innerHTML = `
+        <p><strong>Montant :</strong> ${t.montant} DA</p>
+        <p><strong>Référence :</strong> ${t.reference}</p>
+        <p id="statut-${t.id}"><strong>Statut :</strong> ${statutLabels[t.statut]}</p>
+        <input type="file" id="preuve-${t.id}" />
+        <button onclick="deposerPreuve('${t.id}')">Déposer preuve</button>
+        <button onclick="validerReglement('${t.id}', true)">Valider</button>
+        <button onclick="validerReglement('${t.id}', false)">Refuser</button>
+        <p id="message-${t.id}" class="message-confiance"></p>
+        <small>Confirmi ne vérifie pas l’authenticité bancaire. Le bénéficiaire valide la transaction.</small>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  // ==== Déposer preuve ====
+  function deposerPreuve(id) {
+    const input = document.getElementById(`preuve-${id}`);
+    if (!input.files.length) {
+      alert("Veuillez sélectionner un fichier.");
+      return;
+    }
+
+    const preuve = input.files[0].name; // Ici on simule l'upload
+
+    const transaction = transactions.find(t => t.id === id);
+    transaction.preuve = preuve;
+    transaction.statut = "reglement_initie";
+    transaction.date_maj = new Date().toISOString();
+
+    document.getElementById(`statut-${id}`).innerText = "Statut : " + statutLabels[transaction.statut];
+    document.getElementById(`message-${id}`).innerText = "Document reçu. Traitement en cours.";
+  }
+
+  // ==== Validation par le bénéficiaire ====
+  function validerReglement(id, accepte = true) {
+    const transaction = transactions.find(t => t.id === id);
+    transaction.statut = accepte ? "reglement_valide" : "reglement_refuse";
+    transaction.date_maj = new Date().toISOString();
+
+    document.getElementById(`statut-${id}`).innerText = "Statut : " + statutLabels[transaction.statut];
+    document.getElementById(`message-${id}`).innerText = accepte
+      ? "Règlement validé par le bénéficiaire."
+      : "Règlement refusé, veuillez fournir une nouvelle preuve.";
+  }
+
+  // ==== Initialisation ====
+  renderTransactions();
+
+</script>
+</body>
+</html>

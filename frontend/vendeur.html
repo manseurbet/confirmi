@@ -2,8 +2,13 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Formulaire Vendeur</title>
+
 <style>
+/* =========================
+   BASE
+========================= */
 body {
   font-family: Arial, sans-serif;
   background: #f5f6f8;
@@ -16,6 +21,9 @@ h2 {
   margin-bottom: 20px;
 }
 
+/* =========================
+   FORMULAIRE
+========================= */
 form {
   max-width: 500px;
   margin: auto;
@@ -31,7 +39,7 @@ label {
   font-weight: bold;
 }
 
-input, select {
+input {
   width: 100%;
   padding: 10px;
   margin-top: 6px;
@@ -46,6 +54,9 @@ input[readonly] {
   color: #555;
 }
 
+/* =========================
+   BOUTON
+========================= */
 button {
   width: 100%;
   margin-top: 25px;
@@ -62,12 +73,42 @@ button:hover {
   background-color: #0056b3;
 }
 
-#clientLink {
-  margin-top: 10px;
-  font-weight: bold;
+/* =========================
+   BLOC LIEN CLIENT
+========================= */
+.link-container {
+  max-width: 500px;
+  margin: 20px auto 0 auto;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+/* =========================
+   MOBILE
+========================= */
+@media (max-width: 600px) {
+  body {
+    padding: 15px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  form, .link-container {
+    padding: 20px;
+  }
+
+  input, button {
+    font-size: 16px;
+  }
 }
 </style>
 </head>
+
 <body>
 
 <h2>Création de commande</h2>
@@ -92,10 +133,14 @@ button:hover {
   <button type="submit">Créer la transaction</button>
 </form>
 
-<br>
-<label>Lien client
-  <input type="text" id="clientLink" readonly style="width:100%">
-</label>
+<!-- =========================
+     LIEN CLIENT (CENTRÉ)
+========================= -->
+<div class="link-container" id="linkContainer" style="display:none;">
+  <label>Veuillez copier ce lien et l’envoyer au client
+    <input type="text" id="clientLink" readonly>
+  </label>
+</div>
 
 <script>
 // --------------------
@@ -127,14 +172,12 @@ document.getElementById("vendorForm").addEventListener("submit", async (e) => {
 
     const data = await res.json();
 
-    if (data.success) {
-      clientLinkField.value = data.clientLink;
-      alert("Transaction créée !\nCopiez le lien pour le client.");
-      // Facultatif : ouvre automatiquement le lien
-      // window.open(data.clientLink, "_blank");
-    } else {
-      alert("Erreur lors de la création de la transaction.");
-    }
+  if (data.success) {
+  clientLinkField.value = data.clientLink;
+  linkContainer.style.display = "block"; // 👈 AFFICHER ICI
+  alert("Transaction créée !\nCopiez le lien pour le client.");
+}
+
   } catch (err) {
     alert("Erreur serveur : " + err);
   }

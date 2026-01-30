@@ -22,6 +22,52 @@
     }
     th { background: #007bff; color: white; }
     a { color: #007bff; text-decoration: none; }
+/* =========================
+   MODE TÉLÉPHONE
+========================= */
+@media (max-width: 700px) {
+
+  body {
+    padding: 10px;
+  }
+
+  h2 {
+    text-align: center;
+    font-size: 18px;
+  }
+
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    margin-bottom: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    padding: 10px;
+  }
+
+  td {
+    text-align: left;
+    padding: 6px 10px;
+    border: none;
+    position: relative;
+  }
+
+  td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: block;
+    color: #555;
+    margin-bottom: 2px;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -36,6 +82,7 @@
       <th>Produit</th>
       <th>Montant</th>
       <th>Mode paiement</th>
+      <th>Preuve</th>
       <th>Statut</th>
       <th>Action</th>
     </tr>
@@ -59,17 +106,22 @@ async function loadTransactions() {
 
     data.transactions.forEach(t => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${t.transactionId}</td>
-        <td>${t.clientName}</td>
-        <td>${t.productRef}</td>
-        <td>${t.amount} DA</td>
-        <td>${t.paymentMethod || '-'}</td>
-        <td>${t.confirmed ? 'Confirmée' : 'En attente'}</td>
-        <td>
-          <a href="/client.html?id=${t.transactionId}" target="_blank">Voir</a>
-        </td>
-      `;
+  const preuve = t.attachment
+    ? `<a href="/uploads/${t.attachment}" target="_blank">Télécharger</a>`
+    : "—";
+     tr.innerHTML = `
+  <td data-label="ID">${t.transactionId}</td>
+  <td data-label="Client">${t.clientName}</td>
+  <td data-label="Produit">${t.productRef}</td>
+  <td data-label="Montant">${t.amount} DA</td>
+  <td data-label="Paiement">${t.paymentMethod || '-'}</td>
+  <td data-label="Preuve">${preuve}</td>
+  <td data-label="Statut">${t.confirmed ? 'Confirmée' : 'En attente'}</td>
+  <td data-label="Action">
+    <a href="/client.html?id=${t.transactionId}" target="_blank">Voir</a>
+  </td>
+`;
+
       tbody.appendChild(tr);
     });
 
