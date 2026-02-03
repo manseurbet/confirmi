@@ -1,5 +1,3 @@
-throw new Error("DEPLOY TEST — SI TU VOIS ÇA, C’EST LE BON CODE");
-
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
