@@ -10,6 +10,8 @@ const PORT = process.env.PORT || 3000;
    MIDDLEWARES
 ========================= */
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use(express.static(path.join(__dirname, "frontend")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -65,7 +67,7 @@ const upload = multer({
 /* =========================
    ROUTE VENDEUR
 ========================= */
-app.post("/create-transaction", (req, res) => {
+app.post("/create-confirmation", (req, res) => {
   const { clientName, productRef, amount, description } = req.body;
 
   if (!clientName || !productRef || !amount) {
