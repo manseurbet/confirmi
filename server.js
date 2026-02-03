@@ -65,8 +65,20 @@ const upload = multer({
 /* =========================
    ROUTE VENDEUR
 ========================= */
-app.post("/create-transaction", (req, res) => {
-  const { clientName, productRef, amount, description } = req.body;
+app.post("/create-confirmation", (req, res) => {
+  console.log("➡️ /create-confirmation appelée");
+  console.log("BODY =", req.body);
+
+  const id = Date.now().toString(36);
+
+  confirmations[id] = {
+    ...req.body,
+    createdAt: new Date()
+  };
+
+  const link = `${req.protocol}://${req.get("host")}/c/${id}`;
+  res.json({ link });
+});
 
   if (!clientName || !productRef || !amount) {
     return res.status(400).json({ success: false, message: "Données manquantes" });
