@@ -5,6 +5,8 @@ const multer = require("multer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+console.log("SERVER VERSION 999");
+
 
 /* =========================
    MIDDLEWARES
