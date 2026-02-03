@@ -172,7 +172,7 @@ const clientName = document.getElementById("clientName");
 const productRef = document.getElementById("productRef");
 const amount = document.getElementById("amount");
 const description = document.getElementById("description");
-const clientLinkField = document.getElementById("clientLink").value = data.clientLink;
+const clientLinkField = document.getElementById("clientLink");
 
 // --------------------
 // Form submit
@@ -234,9 +234,20 @@ function sendSMS() {
 
 
 function copyLink() {
-  navigator.clipboard.writeText(confirmationLink);
+  const input = document.getElementById("clientLink");
+
+  if (!input.value) {
+    alert("Aucun lien à copier");
+    return;
+  }
+
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value);
+
   alert("Lien copié");
 }
+
 </script>
 
 
