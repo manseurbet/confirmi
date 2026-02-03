@@ -161,14 +161,14 @@ createBtn.addEventListener("click", async () => {
 
 function sendWhatsApp() {
   const text = encodeURIComponent(
-    "Voici la confirmation de paiement : " + confirmationLink
+    "Veuillez confirmer votre commande sur ce lien : " + confirmationLink
   );
   window.open("https://wa.me/?text=" + text, "_blank");
 }
 
 function sendSMS() {
   const text = encodeURIComponent(
-    "Confirmation de paiement : " + confirmationLink
+    "Veuillez confirmer votre commande sur ce lien : " + confirmationLink
   );
   window.location.href = "sms:?body=" + text;
 }
