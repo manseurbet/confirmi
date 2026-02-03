@@ -3,12 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Formulaire Vendeur</title>
+<title>Création de commande</title>
 
 <style>
-/* =========================
-   BASE
-========================= */
 body {
   font-family: Arial, sans-serif;
   background: #f5f6f8;
@@ -21,9 +18,6 @@ h2 {
   margin-bottom: 20px;
 }
 
-/* =========================
-   FORMULAIRE
-========================= */
 form {
   max-width: 500px;
   margin: auto;
@@ -51,15 +45,11 @@ input {
 
 input[readonly] {
   background-color: #eeeeee;
-  color: #555;
 }
 
-/* =========================
-   BOUTON
-========================= */
 button {
   width: 100%;
-  margin-top: 25px;
+  margin-top: 20px;
   padding: 12px;
   background-color: #007bff;
   color: white;
@@ -73,10 +63,7 @@ button:hover {
   background-color: #0056b3;
 }
 
-/* =========================
-   BLOC LIEN CLIENT
-========================= */
-.link-container {
+#sendZone {
   max-width: 500px;
   margin: 20px auto 0 auto;
   background: #ffffff;
@@ -84,27 +71,11 @@ button:hover {
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   text-align: center;
+  display: none;
 }
 
-/* =========================
-   MOBILE
-========================= */
-@media (max-width: 600px) {
-  body {
-    padding: 15px;
-  }
-
-  h2 {
-    font-size: 20px;
-  }
-
-  form, .link-container {
-    padding: 20px;
-  }
-
-  input, button {
-    font-size: 16px;
-  }
+#sendZone button {
+  margin-top: 10px;
 }
 </style>
 </head>
@@ -130,92 +101,62 @@ button:hover {
     <input type="text" id="description">
   </label>
 
-<button type="button" id="createConfirmationBtn" class="primary">
-  Créer la confirmation
-</button>
+  <button type="button" id="createBtn">
+    Créer la confirmation
+  </button>
+</form>
 
-<input
-  type="text"
-  id="confirmationLinkInput"
-  readonly
-  style="width:100%; margin-top:10px;"
->
-
-
-<div id="sendZone" style="display:none; margin-top:20px;">
+<div id="sendZone">
   <p><strong>✅ Confirmation créée</strong></p>
-  <p>Envoyer la confirmation au client :</p>
 
-  <button type="button" onclick="sendWhatsApp()">📲 WhatsApp</button>
-  <button type="button" onclick="sendSMS()">✉️ SMS</button>
+  <label>Lien à envoyer au client
+    <input type="text" id="clientLink" readonly>
+  </label>
   <button type="button" onclick="copyLink()">🔗 Copier le lien</button>
+  <button type="button" onclick="sendWhatsApp()">📲Ouvrir WhatsApp</button>
+  <button type="button" onclick="sendSMS()">✉️   Ouvrir SMS</button>
 
   <p style="font-size:12px; opacity:0.7;">
-    L’envoi se fait depuis votre téléphone.
+    L’envoi se fait depuis votre téléphone
   </p>
 </div>
 
-<!-- =========================
-     LIEN CLIENT (CENTRÉ)
-========================= -->
-<div class="link-container" id="linkContainer" style="display:none;">
-  <label>Veuillez copier ce lien et l’envoyer au client
-    <input type="text" id="clientLink" readonly>
-  </label>
-</div>
-
 <script>
-// --------------------
-// Constantes champs
-// --------------------
-const clientName = document.getElementById("clientName");
-const productRef = document.getElementById("productRef");
-const amount = document.getElementById("amount");
-const description = document.getElementById("description");
-const clientLinkField = document.getElementById("clientLink");
+const createBtn = document.getElementById("createBtn");
+const sendZone = document.getElementById("sendZone");
+const clientLinkInput = document.getElementById("clientLink");
 
-// --------------------
-// Form submit
-// --------------------
-document.getElementById("vendorForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+let confirmationLink = "";
+
+createBtn.addEventListener("click", async () => {
 
   try {
-    const res = await fetch("/create-transaction", {
+    const res = await fetch("/create-confirmation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        clientName: clientName.value,
-        productRef: productRef.value,
-        amount: amount.value,
-        description: description.value
+        clientName: document.getElementById("clientName").value,
+        productRef: document.getElementById("productRef").value,
+        amount: document.getElementById("amount").value,
+        description: document.getElementById("description").value
       })
     });
 
     const data = await res.json();
 
-  if (data.success) {
-  clientLinkField.value = data.clientLink;
-  linkContainer.style.display = "block"; // 👈 AFFICHER ICI
-  alert("Transaction créée !\nCopiez le lien pour le client.");
-}
+    if (!data.success) {
+      alert("Erreur création transaction");
+      return;
+    }
+
+    confirmationLink = data.clientLink;
+    clientLinkInput.value = confirmationLink;
+    sendZone.style.display = "block";
 
   } catch (err) {
-    alert("Erreur serveur : " + err);
+    console.error(err);
+    alert("Erreur serveur");
   }
-});
-</script>
-<script>
-let confirmationLink = "";
-
-document.getElementById("createConfirmationBtn")
-  .addEventListener("click", async function () {
-
-    // PLUS TARD : appel backend
-    // pour l’instant on teste l’UX
-    confirmationLink = "https://confirmi.app/c/ABC123";
-
-    document.getElementById("sendZone").style.display = "block";
 });
 
 function sendWhatsApp() {
@@ -232,24 +173,12 @@ function sendSMS() {
   window.location.href = "sms:?body=" + text;
 }
 
-
 function copyLink() {
-  const input = document.getElementById("clientLink");
-
-  if (!input.value) {
-    alert("Aucun lien à copier");
-    return;
-  }
-
-  input.select();
-  input.setSelectionRange(0, 99999);
-  navigator.clipboard.writeText(input.value);
-
+  navigator.clipboard.writeText(confirmationLink);
   alert("Lien copié");
 }
-
 </script>
-
 
 </body>
 </html>
+
