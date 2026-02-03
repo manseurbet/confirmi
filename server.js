@@ -2,7 +2,6 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -10,6 +9,7 @@ const PORT = process.env.PORT || 3000;
    MIDDLEWARES
 ========================= */
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "frontend")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -189,6 +189,32 @@ app.get("/transactions", (req, res) => {
 /* =========================
    LANCEMENT SERVEUR
 ========================= */
+const confirmations = {};
+
+app.post("/create-confirmation", (req, res) => {
+  const id = Date.now().toString(36);
+
+  confirmations[id] = {
+    ...req.body,
+    createdAt: new Date()
+  };
+
+  const link = `${req.protocol}://${req.get("host")}/c/${id}`;
+  res.json({ link });
+});
+
+app.get("/c/:id", (req, res) => {
+  const confirmation = confirmations[req.params.id];
+  if (!confirmation) {
+    return res.status(404).send("Confirmation introuvable");
+  }
+
+  res.send(`
+    <h2>Confirmation de paiement</h2>
+    <pre>${JSON.stringify(confirmation, null, 2)}</pre>
+  `);
+});
+
 app.listen(PORT, () => {
   console.log(`✅ Confirmi en ligne : http://localhost:${PORT}`);
 });
