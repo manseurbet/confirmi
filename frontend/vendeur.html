@@ -130,29 +130,8 @@ button:hover {
     <input type="text" id="description">
   </label>
 
-<button type="button" id="createConfirmationBtn" class="primary">
-  Créer la confirmation
-</button>
-
-<div id="sendZone" style="display:none; margin-top:20px;">
-  <p><strong>✅ Confirmation créée</strong></p>
-  <p>Envoyer la confirmation au client :</p>
-
-  <button type="button" onclick="sendWhatsApp()">📲 WhatsApp</button>
-  <button type="button" onclick="sendSMS()">✉️ SMS</button>
-  <button type="button" onclick="copyLink()">🔗 Copier le lien</button>
-<input
-  type="text"
-  id="confirmationLinkInput"
-  readonly
-  style="width:100%; margin-top:10px;"
->
-
-
-  <p style="font-size:12px; opacity:0.7;">
-    L’envoi se fait depuis votre téléphone.
-  </p>
-</div>
+  <button type="submit">Créer la transaction</button>
+</form>
 
 <!-- =========================
      LIEN CLIENT (CENTRÉ)
@@ -204,56 +183,6 @@ document.getElementById("vendorForm").addEventListener("submit", async (e) => {
   }
 });
 </script>
-<script>
-let confirmationLink = "";
-
-document.getElementById("createConfirmationBtn")
-  .addEventListener("click", async function () {
-
-    const form = this.closest("form");
-    const data = new FormData(form);
-
-    const response = await fetch("/create-confirmation", {
-      method: "POST",
-      body: data
-    });
-
-    const result = await response.json();
-    confirmationLink = result.link;
-
-    document.getElementById("confirmationLinkInput").value = confirmationLink;
-    document.getElementById("sendZone").style.display = "block";
-});
-
-    // PLUS TARD : appel backend
-    // pour l’instant on teste l’UX
-confirmationLink = "https://confirmi.app/c/ABC123";
-document.getElementById("confirmationLinkInput").value = confirmationLink;
-
-    document.getElementById("sendZone").style.display = "block";
-});
-
-function sendWhatsApp() {
-  const text = encodeURIComponent(
-    "Voici la confirmation de paiement : " + confirmationLink
-  );
-  window.open("https://wa.me/?text=" + text, "_blank");
-}
-
-function sendSMS() {
-  const text = encodeURIComponent(
-    "Confirmation de paiement : " + confirmationLink
-  );
-  window.location.href = "sms:?body=" + text;
-}
-
-
-function copyLink() {
-  navigator.clipboard.writeText(confirmationLink);
-  alert("Lien copié");
-}
-</script>
-
 
 </body>
 </html>
