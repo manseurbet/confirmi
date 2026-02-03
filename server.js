@@ -7,10 +7,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 /* =========================
-   MIDDLEWARES (ORDRE CRITIQUE)
+   MIDDLEWARES
 ========================= */
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // 🔴 OBLIGATOIRE
 app.use(express.static(path.join(__dirname, "frontend")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -64,25 +63,16 @@ const upload = multer({
 });
 
 /* =========================
-   ROUTE VENDEUR – CRÉATION
+   ROUTE VENDEUR
 ========================= */
 app.post("/create-transaction", (req, res) => {
-  console.log("➡️ /create-transaction appelée");
-  console.log("BODY =", req.body);
-
   const { clientName, productRef, amount, description } = req.body;
 
   if (!clientName || !productRef || !amount) {
-    return res.status(400).json({
-      success: false,
-      message: "Données manquantes"
-    });
+    return res.status(400).json({ success: false, message: "Données manquantes" });
   }
 
-  const transactions = JSON.parse(
-    fs.readFileSync(transactionsFile, "utf8")
-  );
-
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile));
   const transactionId = Date.now();
 
   const transaction = {
@@ -90,75 +80,48 @@ app.post("/create-transaction", (req, res) => {
     clientName,
     productRef,
     amount,
-    description: description || "",
+    description,
     paymentMethod: null,
-    attachment: null,
-    confirmed: false,
-    createdAt: new Date()
+    attachment: null
   };
 
   transactions.push(transaction);
+  fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
 
-  fs.writeFileSync(
-    transactionsFile,
-    JSON.stringify(transactions, null, 2)
-  );
+  const clientLink = `${req.protocol}://${req.get("host")}/client.html?id=${transactionId}`;
 
-  const clientLink = `${req.protocol}://${req.get(
-    "host"
-  )}/client.html?id=${transactionId}`;
-
-  res.json({
-    success: true,
-    clientLink
-  });
+  res.json({ success: true, clientLink });
 });
 
 /* =========================
    ROUTE CLIENT – LECTURE
 ========================= */
 app.get("/transaction/:id", (req, res) => {
-  const transactions = JSON.parse(
-    fs.readFileSync(transactionsFile, "utf8")
-  );
-
-  const transaction = transactions.find(
-    t => t.transactionId == req.params.id
-  );
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile));
+  const transaction = transactions.find(t => t.transactionId == req.params.id);
 
   if (!transaction) {
-    return res.status(404).json({
-      success: false,
-      message: "Transaction introuvable"
-    });
+    return res.status(404).json({ success: false });
   }
 
-  res.json({
-    success: true,
-    transaction
-  });
+  res.json({ success: true, transaction });
 });
 
 /* =========================
-   ROUTE CLIENT – CONFIRMATION
+   ROUTE CLIENT – VALIDATION
 ========================= */
 app.post(
   "/confirm-transaction/:id",
   upload.single("attachment"),
   (req, res) => {
 
-    console.log("➡️ /confirm-transaction appelée");
-
     const { paymentMethod } = req.body;
-
-    const transactions = JSON.parse(
-      fs.readFileSync(transactionsFile, "utf8")
-    );
-
+    const transactions = JSON.parse(fs.readFileSync(transactionsFile, "utf8"));
     const transaction = transactions.find(
       t => t.transactionId == req.params.id
     );
 
+    // 1️⃣ Transaction introuvable
     if (!transaction) {
       return res.status(404).json({
         success: false,
@@ -166,13 +129,15 @@ app.post(
       });
     }
 
+    // 2️⃣ Déjà confirmée → STOP
     if (transaction.confirmed === true) {
       return res.json({
         success: false,
-        message: "Cette transaction est déjà confirmée"
+        message: "Cette commande a déjà été confirmée."
       });
     }
 
+    // 3️⃣ Mode de paiement requis
     if (!paymentMethod) {
       return res.status(400).json({
         success: false,
@@ -180,16 +145,15 @@ app.post(
       });
     }
 
-    if (
-      paymentMethod.toLowerCase() !== "especes" &&
-      !req.file
-    ) {
+    // 4️⃣ Si pas espèces → fichier obligatoire
+    if (paymentMethod.toLowerCase() !== "especes" && !req.file) {
       return res.status(400).json({
         success: false,
         message: "Pièce justificative requise"
       });
     }
 
+    // 5️⃣ Validation
     transaction.paymentMethod = paymentMethod;
     transaction.confirmed = true;
 
@@ -198,6 +162,7 @@ app.post(
       transaction.originalFilename = req.file.originalname;
     }
 
+    // 6️⃣ Sauvegarde
     fs.writeFileSync(
       transactionsFile,
       JSON.stringify(transactions, null, 2)
@@ -207,9 +172,6 @@ app.post(
   }
 );
 
-/* =========================
-   LISTE TRANSACTIONS (DEBUG)
-========================= */
 app.get("/transactions", (req, res) => {
   try {
     const transactions = JSON.parse(
