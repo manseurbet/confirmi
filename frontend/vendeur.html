@@ -140,7 +140,6 @@ button:hover {
 
   <button type="button" onclick="sendWhatsApp()">📲 WhatsApp</button>
   <button type="button" onclick="sendSMS()">✉️ SMS</button>
-  <button type="button" onclick="sendMessenger()">💬 Messenger</button>
   <button type="button" onclick="copyLink()">🔗 Copier le lien</button>
 <input
   type="text"
@@ -211,6 +210,21 @@ let confirmationLink = "";
 document.getElementById("createConfirmationBtn")
   .addEventListener("click", async function () {
 
+    const form = this.closest("form");
+    const data = new FormData(form);
+
+    const response = await fetch("/create-confirmation", {
+      method: "POST",
+      body: data
+    });
+
+    const result = await response.json();
+    confirmationLink = result.link;
+
+    document.getElementById("confirmationLinkInput").value = confirmationLink;
+    document.getElementById("sendZone").style.display = "block";
+});
+
     // PLUS TARD : appel backend
     // pour l’instant on teste l’UX
 confirmationLink = "https://confirmi.app/c/ABC123";
@@ -233,19 +247,13 @@ function sendSMS() {
   window.location.href = "sms:?body=" + text;
 }
 
-function sendMessenger() {
-  const url = encodeURIComponent(confirmationLink);
-  window.open(
-    "https://www.facebook.com/sharer/sharer.php?u=" + url,
-    "_blank"
-  );
-}
 
 function copyLink() {
   navigator.clipboard.writeText(confirmationLink);
   alert("Lien copié");
 }
 </script>
+
 
 </body>
 </html>
