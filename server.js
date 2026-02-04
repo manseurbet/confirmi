@@ -69,27 +69,36 @@ const upload = multer({
    ROUTE VENDEUR
 ========================= */
 app.post("/create-confirmation", (req, res) => {
-  const { clientName, productRef, amount } = req.body;
+  const { clientName, productRef, amount, description } = req.body;
   const confirmations = JSON.parse(fs.readFileSync(transactionsFile));
 
-  // Chercher si la transaction existe déjà
   const existing = confirmations.find(c =>
     c.clientName === clientName &&
     c.productRef === productRef &&
     c.amount == amount
   );
 
-  if(existing){
-    return res.json({ success: true, clientLink: existing.clientLink });
+  if (existing) {
+    const clientLink = `${req.headers.origin}/client.html?id=${existing.transactionId}`;
+    return res.json({ success: true, clientLink });
   }
 
-  // sinon créer nouvelle transaction
-  const transactionId = Date.now();
-  const clientLink = `${req.protocol}://${req.get("host")}/client.html?id=${transactionId}`;
-  const transaction = { transactionId, clientName, productRef, amount, description: req.body.description, paymentMethod: null, attachment: null, clientLink };
+  const transactionId = Date.now().toString();
+
+  const transaction = {
+    transactionId,
+    clientName,
+    productRef,
+    amount,
+    description,
+    paymentMethod: null,
+    attachment: null
+  };
+
   confirmations.push(transaction);
   fs.writeFileSync(transactionsFile, JSON.stringify(confirmations, null, 2));
 
+  const clientLink = `${req.headers.origin}/client.html?id=${transactionId}`;
   res.json({ success: true, clientLink });
 });
 
