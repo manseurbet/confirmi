@@ -69,29 +69,26 @@ const upload = multer({
    ROUTE VENDEUR
 ========================= */
 app.post("/create-confirmation", (req, res) => {
-  const { clientName, productRef, amount, description } = req.body;
+  const { clientName, productRef, amount } = req.body;
+  const confirmations = JSON.parse(fs.readFileSync(transactionsFile));
 
-  if (!clientName || !productRef || !amount) {
-    return res.status(400).json({ success: false, message: "Données manquantes" });
+  // Chercher si la transaction existe déjà
+  const existing = confirmations.find(c =>
+    c.clientName === clientName &&
+    c.productRef === productRef &&
+    c.amount == amount
+  );
+
+  if(existing){
+    return res.json({ success: true, clientLink: existing.clientLink });
   }
 
-  const transactions = JSON.parse(fs.readFileSync(transactionsFile));
+  // sinon créer nouvelle transaction
   const transactionId = Date.now();
-
-  const transaction = {
-    transactionId,
-    clientName,
-    productRef,
-    amount,
-    description,
-    paymentMethod: null,
-    attachment: null
-  };
-
-  transactions.push(transaction);
-  fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
-
   const clientLink = `${req.protocol}://${req.get("host")}/client.html?id=${transactionId}`;
+  const transaction = { transactionId, clientName, productRef, amount, description: req.body.description, paymentMethod: null, attachment: null, clientLink };
+  confirmations.push(transaction);
+  fs.writeFileSync(transactionsFile, JSON.stringify(confirmations, null, 2));
 
   res.json({ success: true, clientLink });
 });
@@ -195,4 +192,3 @@ app.get("/transactions", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Confirmi en ligne : http://localhost:${PORT}`);
 });
-
