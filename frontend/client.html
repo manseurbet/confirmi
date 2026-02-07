@@ -104,6 +104,9 @@ button:hover {
   <label>Nom du client
     <input type="text" id="clientName" readonly>
   </label>
+<label>Téléphone
+  <input type="text" id="clientPhone" readonly>
+</label>
 
   <label>Référence produit
     <input type="text" id="productRef" readonly>
@@ -150,10 +153,11 @@ async function loadTransaction() {
     if (!data.success) { alert("Transaction introuvable !"); return; }
 
     const t = data.transaction;
-    document.getElementById("clientName").value = t.clientName;
-    document.getElementById("productRef").value = t.productRef;
-    document.getElementById("amount").value = t.amount;
-    document.getElementById("description").value = t.description || "";
+document.getElementById("clientName").value = t.clientName;
+document.getElementById("clientPhone").value = t.clientPhone || "";
+document.getElementById("productRef").value = t.productRef;
+document.getElementById("amount").value = t.amount;
+document.getElementById("description").value = t.description || "";
 
     if(t.paymentMethod){
       const pm = document.getElementById("paymentMethod");

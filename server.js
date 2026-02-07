@@ -69,14 +69,25 @@ const upload = multer({
    ROUTE VENDEUR
 ========================= */
 app.post("/create-confirmation", (req, res) => {
-  const { clientName, productRef, amount, description } = req.body;
+const { clientName, clientPhone, productRef, amount, description } = req.body;
+
+if (!clientName || !clientPhone || !productRef || !amount) {
+  return res.status(400).json({
+    success: false,
+    message: "Numéro de téléphone obligatoire"
+  });
+}
+
   const confirmations = JSON.parse(fs.readFileSync(transactionsFile));
 
-  const existing = confirmations.find(c =>
+const existing = confirmations.find(c => {
+  return (
     c.clientName === clientName &&
+    c.clientPhone === clientPhone &&
     c.productRef === productRef &&
     c.amount == amount
   );
+});
 
   if (existing) {
     const clientLink = `${req.headers.origin}/client.html?id=${existing.transactionId}`;
@@ -88,6 +99,7 @@ app.post("/create-confirmation", (req, res) => {
   const transaction = {
     transactionId,
     clientName,
+   clientPhone,
     productRef,
     amount,
     description,

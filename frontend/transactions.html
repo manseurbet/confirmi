@@ -79,6 +79,8 @@
     <tr>
       <th>ID</th>
       <th>Client</th>
+      <th>Telephone</th>
+
       <th>Produit</th>
       <th>Montant</th>
       <th>Mode paiement</th>
@@ -112,6 +114,8 @@ async function loadTransactions() {
      tr.innerHTML = `
   <td data-label="ID">${t.transactionId}</td>
   <td data-label="Client">${t.clientName}</td>
+   <td data-label="Telephone">${t.clientPhone}</td>
+
   <td data-label="Produit">${t.productRef}</td>
   <td data-label="Montant">${t.amount} DA</td>
   <td data-label="Paiement">${t.paymentMethod || '-'}</td>
