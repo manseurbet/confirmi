@@ -31,7 +31,7 @@ h1 {
   text-align:center;
   font-size:13px;
   color:#666;
-  margin-bottom:15px;
+  margin-bottom:5;
 }
 
 /* رسائل قانونية */
@@ -119,7 +119,8 @@ button:hover {
 • بإالتأكيد، أنت توافق على شروط الخدمة وسياسة الخصوصية.
 </div>
 
-<h2>  أكد طلبك عبر هذا الرابط الآمن </h2>
+<h2>  راجع المعلومات و أكد الطلب بكل أمان
+ </h2>
 
 <form id="clientForm" enctype="multipart/form-data">
   <label>👤 اسم الزابون
@@ -153,7 +154,7 @@ button:hover {
     <input type="file" id="attachment">
   </label>
 
-  <button type="submit">تأكيد العملية</button>
+  <button type="submit">تأكيد الطلب</button>
 </form>
 
 <script>
@@ -193,7 +194,7 @@ async function loadTransaction() {
 
   } catch (err) {
     console.error(err);
-    alert("حدث خطأ أثناء تحميل المعاملة!");
+    alert(" خطأ أثناء تحميل المعاملة!");
   }
 }
 
@@ -256,11 +257,11 @@ document.getElementById("clientForm").addEventListener("submit", async (e) => {
     const data = await res.json();
 
     if(data.success){
-      alert("تم تأكيد العملية بنجاح!");
+      alert("تم تأكيد العملية بنجاح 👍!");
       paymentSelect.disabled = true;
       attachment.disabled = true;
     } else {
-      alert("حدث خطأ: " + data.message);
+      alert(" خطأ: " + data.message);
     }
   } catch(err){
     console.error(err);
@@ -268,6 +269,14 @@ document.getElementById("clientForm").addEventListener("submit", async (e) => {
   }
 });
 </script>
+<footer style="
+  margin-top:30px;
+  font-size:12px;
+  color:#777;
+  text-align:center;">
+ منصة تقنية لتأكيد الطلبات فقط"Confirmi"<br>
+الدفع والتسليم يتمان مباشرة بين البائع والزبون
+</footer>
 
 </body>
 </html>
