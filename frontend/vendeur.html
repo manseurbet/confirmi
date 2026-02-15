@@ -33,6 +33,10 @@ button:hover{background:#0056b3;}
   <label>Référence produit
     <input type="text" id="productRef" required>
   </label>
+<label>Photo du produit (optionnelle)
+  <input type="file" id="productPhoto" accept="image/*">
+</label>
+
 
   <label>Montant
     <input type="number" id="amount" required>
@@ -66,40 +70,64 @@ const sendZone = document.getElementById("sendZone");
 const clientLinkInput = document.getElementById("clientLink");
 
 let confirmationLink = "";
-let transactionCreated = false; // empêche doublons
+let transactionCreated = false;
 
 createBtn.addEventListener("click", async () => {
-  if(transactionCreated) { 
-    alert("Transaction déjà créée !"); 
-    return; 
+
+  if (transactionCreated) {
+    alert("Commande déjà enregistrée.");
+    return;
   }
 
   const clientName = document.getElementById("clientName").value.trim();
   const clientPhone = document.getElementById("clientPhone").value.trim();
-if (!/^\d{10}$/.test(clientPhone)) {
-  alert("Numéro de téléphone invalide ! Il doit contenir exactement 10 chiffres.");
-  return;
-}
   const productRef = document.getElementById("productRef").value.trim();
   const amount = document.getElementById("amount").value.trim();
   const description = document.getElementById("description").value.trim();
+  const productPhoto = document.getElementById("productPhoto").files[0];
 
-  if(!clientName || !clientPhone ||!productRef || !amount){
-    alert("Veuillez remplir les champs obligatoires !");
+  // 🔴 VALIDATIONS STRICTES
+  if (!clientName || !productRef || !amount) {
+    alert("Champs obligatoires manquants.");
     return;
   }
+
+  if (!/^\d{10}$/.test(clientPhone)) {
+    alert("Le numéro de téléphone doit contenir 10 chiffres.");
+    return;
+  }
+
+  if (!productPhoto) {
+    alert("Photo du produit obligatoire.");
+    return;
+  }
+
+  // ✅ FormData (OBLIGATOIRE pour multer)
+  const formData = new FormData();
+  formData.append("clientName", clientName);
+  formData.append("clientPhone", clientPhone);
+  formData.append("productRef", productRef);
+  formData.append("amount", amount);
+  formData.append("description", description);
+  formData.append("productPhoto", productPhoto);
 
   try {
     const res = await fetch("/create-confirmation", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clientName, clientPhone, productRef, amount, description })
+      body: formData
     });
+
+    // 🔴 ERREUR SERVEUR VISIBLE
+    if (!res.ok) {
+      const txt = await res.text();
+      alert("Erreur serveur : " + txt);
+      return;
+    }
 
     const data = await res.json();
 
-    if(!data.success){
-      alert("Erreur création transaction !");
+    if (!data.success) {
+      alert(data.message || "Erreur création commande.");
       return;
     }
 
@@ -108,28 +136,34 @@ if (!/^\d{10}$/.test(clientPhone)) {
     sendZone.style.display = "block";
     transactionCreated = true;
 
-  } catch(err){
+  } catch (err) {
     console.error(err);
-    alert("Erreur serveur !");
+    alert("Erreur réseau.");
   }
 });
 
-function sendWhatsApp(){
-  const text = encodeURIComponent("Veuillez confirmer votre commande sur ce lien sécurisé : " + confirmationLink);
+// ---------- ACTIONS ----------
+function copyLink() {
+  navigator.clipboard.writeText(confirmationLink);
+  alert("Lien copié.");
+}
+
+function sendWhatsApp() {
+  const text = encodeURIComponent(
+    "Bonjour, veuillez confirmer votre commande via ce lien sécurisé : " + confirmationLink
+  );
   window.open("https://wa.me/?text=" + text, "_blank");
 }
 
-function sendSMS(){
-  const text = encodeURIComponent("Veuillez confirmer votre commande sur ce lien sécurisé : " + confirmationLink);
+function sendSMS() {
+  const text = encodeURIComponent(
+    "Veuillez confirmer votre commande : " + confirmationLink
+  );
   window.location.href = "sms:?body=" + text;
 }
-
-function copyLink(){
-  navigator.clipboard.writeText(confirmationLink);
-  alert("Lien copié !");
-}
-
 </script>
+
+
 
 </body>
 </html>
