@@ -1,318 +1,197 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>إستمارة الزبون</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmi – تأكيد الطلب</title>
+
 <style>
-body {
-  line-height: 1.3;
-}
-/* =======================
-   الأنماط العامة
-======================= */
-body {
+body{
+  margin:0;
   font-family: Arial, sans-serif;
-  background: #f5f6f8;
-  margin: 0;
-  padding: 20px;
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  color:#fff;
 }
-
-/* العناوين */
-h1, h2 {
-  text-align: center;
-  margin-bottom: 15px;
+.container{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
 }
-
-
-/* رسالة ثقة */
-.trust-msg {
+.box{
+  max-width:500px;
+  width:100%;
+  background:#0b1220;
+  border-radius:16px;
+  padding:32px 26px;
   text-align:center;
-  font-size:13px;
-  color:#666;
-  margin-bottom:5;
+  box-shadow:0 20px 60px rgba(0,0,0,0.4);
 }
-
-/* رسائل قانونية */
-.legal-msg {
-  background: #f0f0f0;
-  border-left: 4px solid #007bff;
-  padding: 10px 15px;
-  margin-bottom: 15px;
-  font-size: 13px;
-  color: #333;
-  line-height: 1.4em;
-  border-radius: 5px;
+h1{
+  font-size:28px;
+  margin-bottom:12px;
 }
-
-/* Formulaire centré et responsive */
-form {
-  max-width: 500px;
-  margin: auto;
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+h1 span{ color:#22c55e; }
+p{
+  font-size:15px;
+  line-height:1.5;
+  opacity:.9;
+  margin-bottom:26px;
 }
-
-/* Labels et champs */
-label {
-  display: block;
-  margin-top: 15px;
-  font-weight: bold;
+.form-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:12px;
 }
-
-input, select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-  font-size: 14px;
+.form-row label{
+  flex:0 0 35%;
+  text-align:left;
+  font-weight:bold;
 }
-
-/* Champs readonly */
-input[readonly] {
-  background: #eee;
-  color: #555;
+.form-row input, .form-row select{
+  flex:1;
+  padding:10px;
+  border-radius:6px;
+  border:none;
+  font-size:14px;
+  box-sizing:border-box;
+  background:#122135;
+  color:#fff;
 }
-
-/* Bouton */
-button {
-  width: 100%;
-  margin-top: 25px;
-  padding: 12px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: 0.3s;
+.form-row input[readonly]{ background:#0b1220; color:#fff; }
+#productImage{
+  width:100%;
+  border-radius:12px;
+  margin-bottom:20px;
 }
-
-button:hover {
-  background-color: #218838;
+button{
+  width:100%;
+  padding:12px;
+  background:#22c55e;
+  color:#022c22;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
 }
-
-/* Adaptation Mobile */
-@media (max-width: 600px) {
-  body { padding: 10px; }
-  form { padding: 15px; }
-  h1 { font-size: 1.3em; }
-  h2 { font-size: 1.2em; }
-  input, select, button { font-size: 14px; padding: 8px; }
-}
-/* ===== HEADER FIXE EN HAUT ===== */
-.header {
-  text-align: center;
-  padding: 10px 10px 5px;
-  background: #f5f6f8;
-}
-
-.logo {
-  width: 200px;
-  max-width: 75%;
-  display: block;
-  margin: 0 auto -40px;
-}
-
-.subtitle {
-  font-size: 12px;
-  color: #555;
-  margin-bottom: 0 
-line-height: 1.2;
-}
-
-/* Corriger les marges globales */
-body {
-  margin: 0;
-  padding: 0;
-}
-
-h2 {
-  margin: 5px 0 10px;
-  line-height: 1.3;
-}
-
-.legal-msg {
-  background: #f0f0f0;
-  border-left: 4px solid #007bff;
-  padding: 6px 10px;
-  margin: 5px 15px 10px;
-  font-size: 12px;
-  text-align: center;
-  border-radius: 5px;
-  line-height: 1.3;
-}
-
+button:hover{ background:#16a34a; }
 </style>
 </head>
 <body>
 
-<!-- ===== HEADER EN HAUT ===== -->
-<div class="header">
-  <img src="logo.png" alt="Confirmi" class="logo">
-  <div class="subtitle">عملية آمنة • رابط خاص بك • بدون تسجيل</div>
+<div class="container">
+  <div class="box">
+
+    <h1>Confirmi <span>✓</span></h1>
+    <p>تأكد من المعلومات قبل الإرسال • </p>
+
+    <img id="productImage" src="" alt="صورة المنتج">
+
+    <form id="clientForm" enctype="multipart/form-data">
+      <div class="form-row">
+        <label>👤 اسم الزبون</label>
+        <input type="text" id="clientName" readonly>
+      </div>
+
+      <div class="form-row">
+        <label>📞 رقم الهاتف</label>
+        <input type="text" id="clientPhone" readonly>
+      </div>
+
+      <div class="form-row">
+        <label>🔖 رمز المنتج</label>
+        <input type="text" id="productRef" readonly>
+      </div>
+
+      <div class="form-row">
+        <label>💰 المبلغ</label>
+        <input type="number" id="amount" readonly>
+      </div>
+
+      <div class="form-row">
+        <label>📝 الوصف</label>
+        <input type="text" id="description" readonly>
+      </div>
+
+      <div class="form-row">
+        <label>💳 طريقة الدفع</label>
+        <select id="paymentMethod" required>
+          <option value="especes">عند الاستلام</option>
+          <option value="virement">تحويل بنكي</option>
+        </select>
+      </div>
+
+      <div class="form-row" id="attachmentRow" style="display:none;">
+        <label>📎 إثبات الدفع</label>
+        <input type="file" id="attachment" accept="image/*">
+      </div>
+
+      <button type="submit">تأكيد الطلب</button>
+    </form>
+
+  </div>
 </div>
-
-<div class="legal-msg">
-  • جميع البيانات سرية ولن يتم مشاركتها مع أي طرف ثالث.<br>
-  • بالتأكيد، أنت توافق على شروط الخدمة وسياسة الخصوصية.
-</div>
-
-<h2>راجع المعلومات و أكد الطلب بكل أمان</h2>
-<form id="clientForm" enctype="multipart/form-data">
-  <label>👤 اسم الزبون
-    <input type="text" id="clientName" readonly>
-  </label>
-
-  <label>📞 رقم الهاتف
-    <input type="text" id="clientPhone" readonly>
-  </label>
-
-  <label>رمز المنتج
-    <input type="text" id="productRef" readonly>
-  </label>
-<label>📸 صورة المنتج</label>
-<img id="productPhoto" src="" alt="صورة المنتج" style="width:100%; max-width:300px; display:none; margin-top:10px; border-radius:6px;">
-
-  <label>المبلغ
-    <input type="number" id="amount" readonly>
-  </label>
-
-  <label>الوصف
-    <input type="text" id="description" readonly>
-  </label>
-
-  <label>💳 طريقة الدفع
-    <select id="paymentMethod" required>
-      <option value="especes">عند الأستلام</option>
-      <option value="transfer">تحويل بنكي</option>
-    </select>
-  </label>
-
-  <label id="attachmentLabel">مرفق وصف الدفع
-    <input type="file" id="attachment">
-  </label>
-
-  <button type="submit">تأكيد الطلب</button>
-<form id="clientForm" enctype="multipart/form-data">
-</form>
 
 <script>
-// --------------------
-// الحصول على رقم المعاملة
-// --------------------
-function getTransactionId() {
+// --------- récupération transaction ----------
+function getTransactionId(){
   const params = new URLSearchParams(window.location.search);
   return params.get("id");
 }
 
-// --------------------
-// تحميل بيانات المعاملة
-// --------------------
-async function loadTransaction() {
+async function loadTransaction(){
   const id = getTransactionId();
-  if (!id) { alert("ID de transaction manquant !"); return; }
+  if(!id){ alert("رقم المعاملة مفقود"); return; }
 
-  try {
+  try{
     const res = await fetch(`/transaction/${id}`);
-    if (!res.ok) {
-      const errText = await res.text();
-      alert("Erreur serveur : " + errText);
-      return;
-    }
-
     const data = await res.json();
-    if (!data.success) {
-      alert("Erreur : " + data.message);
-      return;
-    }
+    if(!data.success){ alert("المعاملة غير موجودة"); return; }
 
     const t = data.transaction;
     document.getElementById("clientName").value = t.clientName;
-    document.getElementById("clientPhone").value = t.clientPhone || "";
+    document.getElementById("clientPhone").value = t.clientPhone;
     document.getElementById("productRef").value = t.productRef;
     document.getElementById("amount").value = t.amount;
     document.getElementById("description").value = t.description || "";
-
-    // Photo du produit
-    if (t.photo) {
-      const imgDiv = document.createElement("div");
-      imgDiv.style.textAlign = "center";
-      imgDiv.style.margin = "10px 0";
-
-      const img = document.createElement("img");
-      img.src = t.photo;
-      img.alt = "Photo du produit";
-      img.style.maxWidth = "100%";
-      img.style.borderRadius = "6px";
-      imgDiv.appendChild(img);
-
-      const form = document.getElementById("clientForm");
-      form.insertBefore(imgDiv, form.firstChild);
-    }
-
-    if(t.paymentMethod){
-      const pm = document.getElementById("paymentMethod");
-      pm.value = t.paymentMethod.toLowerCase();
-      pm.disabled = true;
-      document.getElementById("attachment").disabled = true;
-    }
-
-  } catch (err) {
-    console.error(err);
-    alert("Erreur lors du chargement de la transaction !");
-  }
+    document.getElementById("productImage").src = t.photo || "";
+    document.getElementById("paymentMethod").value = t.paymentMethod || "especes";
+  }catch(err){ console.error(err); alert("خطأ أثناء تحميل المعاملة"); }
 }
 
 loadTransaction();
 
-
-// --------------------
-// إدارة حقل المرفقات
-// --------------------
+// --------- toggle pièce jointe ----------
 const paymentSelect = document.getElementById("paymentMethod");
-const attachment = document.getElementById("attachment");
-const attachmentLabel = document.getElementById("attachmentLabel");
+const attachmentRow = document.getElementById("attachmentRow");
 
-function toggleAttachment() {
-  if(paymentSelect.value.toLowerCase() === "especes") {
-    attachment.required = false;
-    attachment.value = "";
-    attachment.disabled = true;
-    attachmentLabel.style.display = "none";
+function toggleAttachment(){
+  if(paymentSelect.value === "virement"){
+    attachmentRow.style.display = "flex";
+    document.getElementById("attachment").required = true;
   } else {
-    attachment.required = true;
-    attachment.disabled = false;
-    attachmentLabel.style.display = "block";
+    attachmentRow.style.display = "none";
+    document.getElementById("attachment").required = false;
   }
 }
 
 paymentSelect.addEventListener("change", toggleAttachment);
 toggleAttachment();
 
-// --------------------
-// إرسال التأكيد
-// --------------------
-document.getElementById("clientForm").addEventListener("submit", async (e) => {
+// --------- envoi confirmation ----------
+document.getElementById("clientForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
-
   const id = getTransactionId();
-  if(!id) { alert("رقم المعاملة مفقود!"); return; }
+  if(!id){ alert("رقم المعاملة مفقود"); return; }
 
   const payment = paymentSelect.value;
-  const file = attachment.files[0];
+  const file = document.getElementById("attachment").files[0];
 
-  if(!payment){
-    alert("الرجاء اختيار طريقة الدفع.");
-    return;
-  }
-
-  if(payment.toLowerCase() !== "especes" && !file){
-    alert("الرجاء إرفاق وصف الدفع.");
+  if(payment === "virement" && !file){
+    alert("الرجاء إرفاق إثبات الدفع.");
     return;
   }
 
@@ -320,34 +199,22 @@ document.getElementById("clientForm").addEventListener("submit", async (e) => {
   formData.append("paymentMethod", payment);
   if(file) formData.append("attachment", file);
 
-  try {
-    const res = await fetch(`/confirm-transaction/${id}`, {
-      method: "POST",
-      body: formData
+  try{
+    const res = await fetch(`/confirm-transaction/${id}`,{
+      method:"POST",
+      body:formData
     });
     const data = await res.json();
-
     if(data.success){
       alert("تم تأكيد العملية بنجاح 👍!");
       paymentSelect.disabled = true;
-      attachment.disabled = true;
+      document.getElementById("attachment").disabled = true;
     } else {
-      alert(" خطأ: " + data.message);
+      alert("خطأ: " + data.message);
     }
-  } catch(err){
-    console.error(err);
-    alert(" خطأ فى إرسال التأكيد!");
-  }
+  }catch(err){ console.error(err); alert("خطأ فى إرسال التأكيد!"); }
 });
 </script>
-<footer style="
-  margin-top:10px;
-  font-size:12px;
-  color:#777;
-  text-align:center;">
- منصة تقنية لتأكيد الطلبات فقط"Confirmi"<br>
-الدفع والتسليم يتمان مباشرة بين البائع والزبون
-</footer>
 
 </body>
 </html>

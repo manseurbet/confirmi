@@ -3,135 +3,150 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vendeur - Création de commande</title>
+<title>Confirmi – Création de commande</title>
+
 <style>
-body { font-family: Arial; background: #f5f6f8; margin:0; padding:30px; }
-h2 { text-align:center; margin-bottom:20px; }
-
-/* Formulaires */
-form { max-width:500px; margin:auto; background:#fff; padding:25px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
-label { display:block; margin-top:15px; font-weight:bold;}
-input, button, select { width:100%; padding:10px; margin-top:6px; border-radius:6px; border:1px solid #ccc; font-size:14px; box-sizing:border-box;}
-input[readonly]{background:#eee;}
-button { background:#007bff; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer; margin-top:20px;}
-button:hover{background:#0056b3;}
-#sendZone { max-width:500px; margin:20px auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.08); text-align:center; display:none;}
-#sendZone button{margin-top:10px;}
-
-/* Sections login/inscription */
-#authSection { max-width:500px; margin:auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); margin-bottom:30px;}
-#authSection h3 { text-align:center; margin-bottom:15px; }
-#commandForm { display:none; }
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  color:#fff;
+}
+.container{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.box{
+  max-width:500px;
+  width:100%;
+  background:#0b1220;
+  border-radius:16px;
+  padding:32px 26px;
+  text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,0.4);
+}
+h1{
+  font-size:28px;
+  margin-bottom:12px;
+}
+h1 span{ color:#22c55e; }
+p{
+  font-size:15px;
+  line-height:1.5;
+  opacity:.9;
+  margin-bottom:26px;
+}
+.form-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:12px;
+}
+.form-row label{
+  flex:0 0 35%;
+  text-align:left;
+  font-weight:bold;
+}
+.form-row input, .form-row select{
+  flex:1;
+  padding:10px;
+  border-radius:6px;
+  border:none;
+  font-size:14px;
+  box-sizing:border-box;
+}
+button{
+  width:100%;
+  padding:12px;
+  background:#22c55e;
+  color:#022c22;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:hover{ background:#16a34a; }
+#sendZone{
+  margin-top:20px;
+  display:none;
+  background:#122135;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  text-align:center;
+}
+#sendZone input{
+  margin-bottom:10px;
+  background:#0b1220;
+  color:#fff;
+}
 </style>
 </head>
 <body>
 
-<!-- ===== LOGIN / INSCRIPTION ===== -->
-<div id="authSection">
-  <h3>Créer un compte vendeur</h3>
-  <form id="registerForm">
-    <input type="text" id="regUsername" placeholder="Nom utilisateur" required>
-    <input type="password" id="regPassword" placeholder="Mot de passe" required>
-    <button type="submit">S'inscrire</button>
-  </form>
+<div class="container">
+  <div class="box">
 
-  <h3>Connexion</h3>
-  <form id="loginForm">
-    <input type="text" id="loginUsername" placeholder="Nom utilisateur" required>
-    <input type="password" id="loginPassword" placeholder="Mot de passe" required>
-    <button type="submit">Se connecter</button>
-  </form>
+    <h1>Confirmi <span>✓</span></h1>
+    <p>WhatsApp أو SMS.أنشئ تأكيد الطلب مباشرة للزبون، وأرسل الرابط عبر </p>
+
+    <form id="vendorForm">
+      <div class="form-row">
+        <label>👤 Nom du client</label>
+        <input type="text" id="clientName" required>
+      </div>
+
+      <div class="form-row">
+        <label>📞 Téléphone</label>
+        <input type="tel" id="clientPhone" required>
+      </div>
+
+      <div class="form-row">
+        <label>🔖 Réf. produit</label>
+        <input type="text" id="productRef" required>
+      </div>
+
+      <div class="form-row">
+        <label>📸 Photo produit</label>
+        <input type="file" id="productPhoto" accept="image/*" required>
+      </div>
+
+      <div class="form-row">
+        <label>💰 Montant</label>
+        <input type="number" id="amount" required>
+      </div>
+
+      <div class="form-row">
+        <label>📝 Description</label>
+        <input type="text" id="description">
+      </div>
+
+      <button type="button" id="createBtn">Saisir La Commande </button>
+    </form>
+
+    <div id="sendZone">
+      <p><strong>✅ Confirmation créée</strong></p>
+      <label>Lien à envoyer au client
+        <!-- Lien à envoyer au client -->
+<div class="form-row" style="margin-top:15px; display:flex; align-items:center;">
+  <label style="flex:0 0 40%; font-size:12px;">🔗 رابط للزبون</label>
+  <input type="text" id="clientLink" readonly style="flex:1; font-size:12px; padding:6px;">
 </div>
 
-<!-- ===== FORMULAIRE CREATION COMMANDE ===== -->
-<div id="commandForm">
-<h2>Création de commande</h2>
-<form id="vendorForm">
-  <label>Nom du client
-    <input type="text" id="clientName" required>
-  </label>
+      <button type="button" onclick="copyLink()">🔗 Copier le lien</button>
+      <button type="button" onclick="sendWhatsApp()">📲Ouvrir WhatsApp</button>
+      <button type="button" onclick="sendSMS()">✉️Ouvrir SMS</button>
+      <p style="font-size:12px; opacity:0.7;">L’envoi se fait depuis votre téléphone</p>
+    </div>
 
-  <label>Téléphone du client
-    <input type="tel" id="clientPhone" required>
-  </label>
-
-  <label>Référence produit
-    <input type="text" id="productRef" required>
-  </label>
-
-  <label>Photo du produit
-    <input type="file" id="productPhoto" accept="image/*" required>
-  </label>
-
-  <label>Montant
-    <input type="number" id="amount" required>
-  </label>
-
-  <label>Description
-    <input type="text" id="description">
-  </label>
-
-  <button type="button" id="createBtn">Créer la confirmation</button>
-</form>
-
-<div id="sendZone">
-  <p><strong>✅ Confirmation créée</strong></p>
-  <label>Lien à envoyer au client
-    <input type="text" id="clientLink" readonly>
-  </label>
-
-  <button type="button" onclick="copyLink()">🔗 Copier le lien</button>
-  <button type="button" onclick="sendWhatsApp()">📲 Ouvrir WhatsApp</button>
-  <button type="button" onclick="sendSMS()">✉️ Ouvrir SMS</button>
-
-  <p style="font-size:12px; opacity:0.7;">L’envoi se fait depuis votre téléphone</p>
-</div>
+  </div>
 </div>
 
 <script>
-// ===== LOGIN / INSCRIPTION =====
-async function registerUser(e){
-  e.preventDefault();
-  const username = document.getElementById("regUsername").value.trim();
-  const password = document.getElementById("regPassword").value.trim();
-  if(!username || !password){ alert("Champs requis"); return; }
-
-  try {
-    const res = await fetch("/register", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ username, password })
-    });
-    const data = await res.json();
-    if(data.success){ alert("Inscription réussie !"); } 
-    else { alert("❌ " + data.message); }
-  } catch(err){ console.error(err); alert("Erreur réseau"); }
-}
-document.getElementById("registerForm").addEventListener("submit", registerUser);
-
-async function loginUser(e){
-  e.preventDefault();
-  const username = document.getElementById("loginUsername").value.trim();
-  const password = document.getElementById("loginPassword").value.trim();
-  if(!username || !password){ alert("Champs requis"); return; }
-
-  try {
-    const res = await fetch("/login", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ username, password })
-    });
-    const data = await res.json();
-    if(data.success){ 
-      alert("Connexion réussie !");
-      document.getElementById("authSection").style.display = "none";
-      document.getElementById("commandForm").style.display = "block";
-    } else { alert("❌ " + data.message); }
-  } catch(err){ console.error(err); alert("Erreur réseau"); }
-}
-document.getElementById("loginForm").addEventListener("submit", loginUser);
-
-// ===== CREATION COMMANDE =====
 const createBtn = document.getElementById("createBtn");
 const sendZone = document.getElementById("sendZone");
 const clientLinkInput = document.getElementById("clientLink");
@@ -139,7 +154,7 @@ let confirmationLink = "";
 let transactionCreated = false;
 
 createBtn.addEventListener("click", async () => {
-  if(transactionCreated){ alert("Commande déjà enregistrée."); return; }
+  if(transactionCreated){ alert("Commande déjà créée."); return; }
 
   const clientName = document.getElementById("clientName").value.trim();
   const clientPhone = document.getElementById("clientPhone").value.trim();
@@ -148,9 +163,8 @@ createBtn.addEventListener("click", async () => {
   const description = document.getElementById("description").value.trim();
   const productPhoto = document.getElementById("productPhoto").files[0];
 
-  if(!clientName || !productRef || !amount){ alert("Champs obligatoires manquants."); return; }
-  if(!/^\d{10}$/.test(clientPhone)){ alert("Le numéro de téléphone doit contenir 10 chiffres."); return; }
-  if(!productPhoto){ alert("Photo du produit obligatoire."); return; }
+  if(!clientName || !productRef || !amount || !productPhoto){ alert("Champs obligatoires manquants."); return; }
+  if(!/^\d{10}$/.test(clientPhone)){ alert("Le numéro doit contenir 10 chiffres."); return; }
 
   const formData = new FormData();
   formData.append("clientName", clientName);
@@ -160,26 +174,25 @@ createBtn.addEventListener("click", async () => {
   formData.append("description", description);
   formData.append("productPhoto", productPhoto);
 
-  try {
-    const res = await fetch("/create-confirmation", { method:"POST", body:formData });
-    if(!res.ok){ const txt=await res.text(); alert("Erreur serveur : "+txt); return; }
+  try{
+    const res = await fetch("/create-confirmation", { method:"POST", body: formData });
+    if(!res.ok){ const txt = await res.text(); alert("Erreur serveur : " + txt); return; }
     const data = await res.json();
-    if(!data.success){ alert(data.message||"Erreur création commande."); return; }
+    if(!data.success){ alert(data.message || "Erreur création."); return; }
+
     confirmationLink = data.clientLink;
     clientLinkInput.value = confirmationLink;
-    sendZone.style.display="block";
+    sendZone.style.display = "block";
     transactionCreated = true;
-  } catch(err){ console.error(err); alert("Erreur réseau."); }
+  }catch(err){ console.error(err); alert("Erreur réseau."); }
 });
 
-// ---------- ACTIONS ----------
 function copyLink(){ navigator.clipboard.writeText(confirmationLink); alert("Lien copié."); }
-function sendWhatsApp(){ window.open("https://wa.me/?text="+encodeURIComponent("Bonjour, confirmez votre commande : "+confirmationLink), "_blank"); }
-function sendSMS(){ window.location.href = "sms:?body="+encodeURIComponent("Veuillez confirmer votre commande : "+confirmationLink); }
+function sendWhatsApp(){ window.open("https://wa.me/?text="+encodeURIComponent("Confirmez votre commande : "+confirmationLink), "_blank"); }
+function sendSMS(){ window.location.href="sms:?body="+encodeURIComponent("Confirmez votre commande : "+confirmationLink); }
 </script>
 
 </body>
 </html>
-
 
 
