@@ -1,12 +1,17 @@
 {
   "name": "confirmi",
   "version": "1.0.0",
+  "description": "Application Confirmi",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "express": "^4.22.1",
-    "multer": "^2.0.2"
+    "express-session": "^1.19.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.0.2",
+    "path": "^0.12.7"
   }
 }

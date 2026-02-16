@@ -3,40 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Création de commande</title>
+<title>Vendeur - Création de commande</title>
 <style>
 body { font-family: Arial; background: #f5f6f8; margin:0; padding:30px; }
 h2 { text-align:center; margin-bottom:20px; }
+
+/* Formulaires */
 form { max-width:500px; margin:auto; background:#fff; padding:25px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
 label { display:block; margin-top:15px; font-weight:bold;}
-input { width:100%; padding:10px; margin-top:6px; border-radius:6px; border:1px solid #ccc; font-size:14px;}
+input, button, select { width:100%; padding:10px; margin-top:6px; border-radius:6px; border:1px solid #ccc; font-size:14px; box-sizing:border-box;}
 input[readonly]{background:#eee;}
-button { width:100%; margin-top:20px; padding:12px; background:#007bff; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer;}
+button { background:#007bff; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer; margin-top:20px;}
 button:hover{background:#0056b3;}
 #sendZone { max-width:500px; margin:20px auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.08); text-align:center; display:none;}
 #sendZone button{margin-top:10px;}
+
+/* Sections login/inscription */
+#authSection { max-width:500px; margin:auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); margin-bottom:30px;}
+#authSection h3 { text-align:center; margin-bottom:15px; }
+#commandForm { display:none; }
 </style>
 </head>
 <body>
 
-<h2>Création de commande</h2>
+<!-- ===== LOGIN / INSCRIPTION ===== -->
+<div id="authSection">
+  <h3>Créer un compte vendeur</h3>
+  <form id="registerForm">
+    <input type="text" id="regUsername" placeholder="Nom utilisateur" required>
+    <input type="password" id="regPassword" placeholder="Mot de passe" required>
+    <button type="submit">S'inscrire</button>
+  </form>
 
+  <h3>Connexion</h3>
+  <form id="loginForm">
+    <input type="text" id="loginUsername" placeholder="Nom utilisateur" required>
+    <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+    <button type="submit">Se connecter</button>
+  </form>
+</div>
+
+<!-- ===== FORMULAIRE CREATION COMMANDE ===== -->
+<div id="commandForm">
+<h2>Création de commande</h2>
 <form id="vendorForm">
   <label>Nom du client
     <input type="text" id="clientName" required>
   </label>
 
-<label>Téléphone du client
-  <input type="tel" id="clientPhone" required>
-</label>
+  <label>Téléphone du client
+    <input type="tel" id="clientPhone" required>
+  </label>
 
   <label>Référence produit
     <input type="text" id="productRef" required>
   </label>
-<label>Photo du produit (optionnelle)
-  <input type="file" id="productPhoto" accept="image/*">
-</label>
 
+  <label>Photo du produit
+    <input type="file" id="productPhoto" accept="image/*" required>
+  </label>
 
   <label>Montant
     <input type="number" id="amount" required>
@@ -49,10 +74,8 @@ button:hover{background:#0056b3;}
   <button type="button" id="createBtn">Créer la confirmation</button>
 </form>
 
-
 <div id="sendZone">
   <p><strong>✅ Confirmation créée</strong></p>
-
   <label>Lien à envoyer au client
     <input type="text" id="clientLink" readonly>
   </label>
@@ -63,21 +86,60 @@ button:hover{background:#0056b3;}
 
   <p style="font-size:12px; opacity:0.7;">L’envoi se fait depuis votre téléphone</p>
 </div>
+</div>
 
 <script>
+// ===== LOGIN / INSCRIPTION =====
+async function registerUser(e){
+  e.preventDefault();
+  const username = document.getElementById("regUsername").value.trim();
+  const password = document.getElementById("regPassword").value.trim();
+  if(!username || !password){ alert("Champs requis"); return; }
+
+  try {
+    const res = await fetch("/register", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if(data.success){ alert("Inscription réussie !"); } 
+    else { alert("❌ " + data.message); }
+  } catch(err){ console.error(err); alert("Erreur réseau"); }
+}
+document.getElementById("registerForm").addEventListener("submit", registerUser);
+
+async function loginUser(e){
+  e.preventDefault();
+  const username = document.getElementById("loginUsername").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+  if(!username || !password){ alert("Champs requis"); return; }
+
+  try {
+    const res = await fetch("/login", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if(data.success){ 
+      alert("Connexion réussie !");
+      document.getElementById("authSection").style.display = "none";
+      document.getElementById("commandForm").style.display = "block";
+    } else { alert("❌ " + data.message); }
+  } catch(err){ console.error(err); alert("Erreur réseau"); }
+}
+document.getElementById("loginForm").addEventListener("submit", loginUser);
+
+// ===== CREATION COMMANDE =====
 const createBtn = document.getElementById("createBtn");
 const sendZone = document.getElementById("sendZone");
 const clientLinkInput = document.getElementById("clientLink");
-
 let confirmationLink = "";
 let transactionCreated = false;
 
 createBtn.addEventListener("click", async () => {
-
-  if (transactionCreated) {
-    alert("Commande déjà enregistrée.");
-    return;
-  }
+  if(transactionCreated){ alert("Commande déjà enregistrée."); return; }
 
   const clientName = document.getElementById("clientName").value.trim();
   const clientPhone = document.getElementById("clientPhone").value.trim();
@@ -86,23 +148,10 @@ createBtn.addEventListener("click", async () => {
   const description = document.getElementById("description").value.trim();
   const productPhoto = document.getElementById("productPhoto").files[0];
 
-  // 🔴 VALIDATIONS STRICTES
-  if (!clientName || !productRef || !amount) {
-    alert("Champs obligatoires manquants.");
-    return;
-  }
+  if(!clientName || !productRef || !amount){ alert("Champs obligatoires manquants."); return; }
+  if(!/^\d{10}$/.test(clientPhone)){ alert("Le numéro de téléphone doit contenir 10 chiffres."); return; }
+  if(!productPhoto){ alert("Photo du produit obligatoire."); return; }
 
-  if (!/^\d{10}$/.test(clientPhone)) {
-    alert("Le numéro de téléphone doit contenir 10 chiffres.");
-    return;
-  }
-
-  if (!productPhoto) {
-    alert("Photo du produit obligatoire.");
-    return;
-  }
-
-  // ✅ FormData (OBLIGATOIRE pour multer)
   const formData = new FormData();
   formData.append("clientName", clientName);
   formData.append("clientPhone", clientPhone);
@@ -112,59 +161,25 @@ createBtn.addEventListener("click", async () => {
   formData.append("productPhoto", productPhoto);
 
   try {
-    const res = await fetch("/create-confirmation", {
-      method: "POST",
-      body: formData
-    });
-
-    // 🔴 ERREUR SERVEUR VISIBLE
-    if (!res.ok) {
-      const txt = await res.text();
-      alert("Erreur serveur : " + txt);
-      return;
-    }
-
+    const res = await fetch("/create-confirmation", { method:"POST", body:formData });
+    if(!res.ok){ const txt=await res.text(); alert("Erreur serveur : "+txt); return; }
     const data = await res.json();
-
-    if (!data.success) {
-      alert(data.message || "Erreur création commande.");
-      return;
-    }
-
+    if(!data.success){ alert(data.message||"Erreur création commande."); return; }
     confirmationLink = data.clientLink;
     clientLinkInput.value = confirmationLink;
-    sendZone.style.display = "block";
+    sendZone.style.display="block";
     transactionCreated = true;
-
-  } catch (err) {
-    console.error(err);
-    alert("Erreur réseau.");
-  }
+  } catch(err){ console.error(err); alert("Erreur réseau."); }
 });
 
 // ---------- ACTIONS ----------
-function copyLink() {
-  navigator.clipboard.writeText(confirmationLink);
-  alert("Lien copié.");
-}
-
-function sendWhatsApp() {
-  const text = encodeURIComponent(
-    "Bonjour, veuillez confirmer votre commande via ce lien sécurisé : " + confirmationLink
-  );
-  window.open("https://wa.me/?text=" + text, "_blank");
-}
-
-function sendSMS() {
-  const text = encodeURIComponent(
-    "Veuillez confirmer votre commande : " + confirmationLink
-  );
-  window.location.href = "sms:?body=" + text;
-}
+function copyLink(){ navigator.clipboard.writeText(confirmationLink); alert("Lien copié."); }
+function sendWhatsApp(){ window.open("https://wa.me/?text="+encodeURIComponent("Bonjour, confirmez votre commande : "+confirmationLink), "_blank"); }
+function sendSMS(){ window.location.href = "sms:?body="+encodeURIComponent("Veuillez confirmer votre commande : "+confirmationLink); }
 </script>
-
-
 
 </body>
 </html>
+
+
 
