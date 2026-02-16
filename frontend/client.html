@@ -215,31 +215,44 @@ function getTransactionId() {
 // --------------------
 async function loadTransaction() {
   const id = getTransactionId();
-  if (!id) { alert("رقم المعاملة مفقود!"); return; }
+  if (!id) { alert("ID de transaction manquant !"); return; }
 
   try {
     const res = await fetch(`/transaction/${id}`);
+    if (!res.ok) {
+      const errText = await res.text();
+      alert("Erreur serveur : " + errText);
+      return;
+    }
+
     const data = await res.json();
-    if (!data.success) { alert("المعاملة غير موجودة!"); return; }
+    if (!data.success) {
+      alert("Erreur : " + data.message);
+      return;
+    }
 
     const t = data.transaction;
-if (t.productPhoto) {
-  const img = document.getElementById("productPhoto");
-  img.src = "/uploads/" + t.productPhoto;
-  img.style.display = "block";
-}
-
     document.getElementById("clientName").value = t.clientName;
     document.getElementById("clientPhone").value = t.clientPhone || "";
     document.getElementById("productRef").value = t.productRef;
     document.getElementById("amount").value = t.amount;
     document.getElementById("description").value = t.description || "";
- const photoElem = document.getElementById("productPhoto");
-    if(t.photo){
-      photoElem.src = t.photo;
-      photoElem.style.display = "block";
-    } else {
-      photoElem.style.display = "none";
+
+    // Photo du produit
+    if (t.photo) {
+      const imgDiv = document.createElement("div");
+      imgDiv.style.textAlign = "center";
+      imgDiv.style.margin = "10px 0";
+
+      const img = document.createElement("img");
+      img.src = t.photo;
+      img.alt = "Photo du produit";
+      img.style.maxWidth = "100%";
+      img.style.borderRadius = "6px";
+      imgDiv.appendChild(img);
+
+      const form = document.getElementById("clientForm");
+      form.insertBefore(imgDiv, form.firstChild);
     }
 
     if(t.paymentMethod){
@@ -251,11 +264,12 @@ if (t.productPhoto) {
 
   } catch (err) {
     console.error(err);
-    alert(" خطأ أثناء تحميل المعاملة!");
+    alert("Erreur lors du chargement de la transaction !");
   }
 }
 
 loadTransaction();
+
 
 // --------------------
 // إدارة حقل المرفقات
