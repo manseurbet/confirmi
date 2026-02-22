@@ -4,102 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Confirmi – تأكيد الطلب</title>
-
 <style>
-body{
-  margin:0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg,#0f172a,#1e293b);
-  color:#fff;
-}
-.container{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-}
-.box{
-  max-width:500px;
-  width:100%;
-  background:#0b1220;
-  border-radius:16px;
-  padding:32px 26px;
-  text-align:center;
-  box-shadow:0 20px 60px rgba(0,0,0,0.4);
-}
-h1{
-  font-size:28px;
-  margin-bottom:12px;
-}
-h1 span{ color:#22c55e; }
-p{
-  font-size:15px;
-  line-height:1.5;
-  opacity:.9;
-  margin-bottom:26px;
-}
-.form-row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:12px;
-}
-.form-row label{
-  flex:0 0 35%;
-  text-align:left;
-  font-weight:bold;
-}
-.form-row input, .form-row select{
-  flex:1;
-  padding:10px;
-  border-radius:6px;
-  border:none;
-  font-size:14px;
-  box-sizing:border-box;
-  background:#122135;
-  color:#fff;
-}
-.form-row input[readonly]{ background:#0b1220; color:#fff; }
-#productImage{
-  width:100%;
-  border-radius:12px;
-  margin-bottom:20px;
-}
-button{
-  width:100%;
-  padding:12px;
-  background:#22c55e;
-  color:#022c22;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
-  font-weight:bold;
-  cursor:pointer;
-}
-button:hover{ background:#16a34a; }
-/* LOGO HEADER */
-.header-logo {
-  text-align:center;
-  margin-bottom:20px;
-}
-.header-logo img {
-  width:200px;
-  max-width:80%;
-}
-
+body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;}
+.container{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.box{max-width:500px;width:100%;background:#0b1220;border-radius:16px;padding:32px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
+h1{font-size:28px;margin-bottom:12px;}
+h1 span{color:#22c55e;}
+p{font-size:15px;line-height:1.5;opacity:.9;margin-bottom:26px;}
+.form-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.form-row label{flex:0 0 35%;text-align:left;font-weight:bold;}
+.form-row input, .form-row select{flex:1;padding:10px;border-radius:6px;border:none;font-size:14px;box-sizing:border-box;background:#122135;color:#fff;}
+.form-row input[readonly]{background:#0b1220;color:#fff;}
+#productImage{width:100%;border-radius:12px;margin-bottom:20px;}
+button{width:100%;padding:12px;background:#22c55e;color:#022c22;border:none;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer;}
+button:hover{background:#16a34a;}
+.header-logo{text-align:center;margin-bottom:20px;}
+.header-logo img{width:200px;max-width:80%;}
+#vendorScoreDiv{margin-bottom:15px;font-size:14px;text-align:center;}
+#attachmentRow{display:none;}
 </style>
 </head>
 <body>
 
 <div class="container">
   <div class="box">
-  <!-- LOGO -->
     <div class="header-logo">
       <img src="logo.png" alt="Confirmi">
     </div>
 
     <p>تأكد من المعلومات قبل الإرسال • </p>
+
+    <!-- Score du vendeur -->
+    <div id="vendorScoreDiv">⭐ تقييم البائع: <span id="vendorScore">0</span></div>
 
     <img id="productImage" src="" alt="صورة المنتج">
 
@@ -137,22 +73,20 @@ button:hover{ background:#16a34a; }
         </select>
       </div>
 
-      <div class="form-row" id="attachmentRow" style="display:none;">
+      <div class="form-row" id="attachmentRow">
         <label>📎 إثبات الدفع</label>
         <input type="file" id="attachment" accept="image/*">
       </div>
 
       <button type="submit">تأكيد الطلب</button>
     </form>
-
   </div>
 </div>
 
 <script>
-// --------- récupération transaction ----------
+// ---------- Récupération transaction ----------
 function getTransactionId(){
-  const params = new URLSearchParams(window.location.search);
-  return params.get("id");
+  return new URLSearchParams(window.location.search).get("id");
 }
 
 async function loadTransaction(){
@@ -165,6 +99,8 @@ async function loadTransaction(){
     if(!data.success){ alert("المعاملة غير موجودة"); return; }
 
     const t = data.transaction;
+
+    // Remplissage formulaire
     document.getElementById("clientName").value = t.clientName;
     document.getElementById("clientPhone").value = t.clientPhone;
     document.getElementById("productRef").value = t.productRef;
@@ -172,12 +108,18 @@ async function loadTransaction(){
     document.getElementById("description").value = t.description || "";
     document.getElementById("productImage").src = t.photo || "";
     document.getElementById("paymentMethod").value = t.paymentMethod || "especes";
+
+    // Affichage score vendeur
+    if(t.vendorScore !== undefined && t.vendorBadge !== undefined){
+      document.getElementById("vendorScore").innerText = `${t.vendorScore} ⭐ (${t.vendorBadge})`;
+    }
+
   }catch(err){ console.error(err); alert("خطأ أثناء تحميل المعاملة"); }
 }
 
 loadTransaction();
 
-// --------- toggle pièce jointe ----------
+// ---------- Gestion pièce jointe ----------
 const paymentSelect = document.getElementById("paymentMethod");
 const attachmentRow = document.getElementById("attachmentRow");
 
@@ -194,7 +136,7 @@ function toggleAttachment(){
 paymentSelect.addEventListener("change", toggleAttachment);
 toggleAttachment();
 
-// --------- envoi confirmation ----------
+// ---------- Confirmation ----------
 document.getElementById("clientForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const id = getTransactionId();
@@ -231,13 +173,6 @@ document.getElementById("clientForm").addEventListener("submit", async (e)=>{
 
 </body>
 </html>
-
-
-
-
-
-
-
 
 
 

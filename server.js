@@ -15,221 +15,177 @@ app.use(express.static(path.join(__dirname, "frontend")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* =========================
-   DOSSIERS & FICHIERS
+   FILES
 ========================= */
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
-
 const transactionsFile = path.join(__dirname, "transactions.json");
-if (!fs.existsSync(transactionsFile)) {
-  fs.writeFileSync(transactionsFile, JSON.stringify([]));
-}
+const scoresFile = path.join(__dirname, "scores.json");
 
-const usersFile = path.join(__dirname, "users.json");
-if (!fs.existsSync(usersFile)) {
-  fs.writeFileSync(usersFile, JSON.stringify([]));
-}
+if (!fs.existsSync(transactionsFile))
+  fs.writeFileSync(transactionsFile, JSON.stringify([], null, 2));
 
-/* =========================
-   MULTER (PHOTOS)
-========================= */
-const storage = multer.diskStorage({
-  destination: uploadsDir,
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, Date.now() + ext);
-  }
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }
-});
-
-/* =========================
-   INSCRIPTION VENDEUR
-========================= */
-app.post("/register", (req, res) => {
-  const { username, password } = req.body;
-
-  if (
-    typeof username !== "string" ||
-    typeof password !== "string" ||
-    username.length < 3 ||
-    password.length < 4
-  ) {
-    return res.json({
-      success: false,
-      message: "Données invalides"
-    });
-  }
-
-  const users = JSON.parse(fs.readFileSync("users.json", "utf8"));
-
-  if (users.find(u => u.username === username)) {
-    return res.json({
-      success: false,
-      message: "Utilisateur déjà existant"
-    });
-  }
-
-  users.push({ username, password });
-
-  fs.writeFileSync("users.json", JSON.stringify(users, null, 2));
-
-  res.json({ success: true });
-});
-
-
-/* =========================
-   LOGIN VENDEUR
-========================= */
-app.post("/login", (req, res) => {
-  const { email, password } = req.body;
-  const users = JSON.parse(fs.readFileSync(usersFile));
-
-  const user = users.find(
-    u => u.email === email && u.password === password
+if (!fs.existsSync(scoresFile))
+  fs.writeFileSync(
+    scoresFile,
+    JSON.stringify({ clients: {}, vendeurs: {} }, null, 2)
   );
 
-  if (!user) {
-    return res.json({ success: false, message: "Identifiants incorrects" });
-  }
-
-  res.json({
-    success: true,
-    user: { id: user.id, name: user.name, email: user.email }
-  });
+/* =========================
+   MULTER
+========================= */
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: "uploads",
+    filename: (req, file, cb) => {
+      cb(null, Date.now() + path.extname(file.originalname));
+    }
+  })
 });
 
 /* =========================
-   CRÉATION COMMANDE (VENDEUR)
+   SCORE HELPERS
+========================= */
+function computeScore(obj) {
+  const total = obj.ok + obj.ko;
+  if (total === 0) return 100;
+  return Math.round((obj.ok / total) * 100);
+}
+
+function badge(score) {
+  if (score >= 80) return "🟢 موثوق";
+  if (score >= 50) return "🟠 متوسط";
+  return "🔴 غير موثوق";
+}
+
+/* =========================
+   GET CLIENT SCORE (VENDEUR)
+========================= */
+app.get("/score/client/:phone", (req, res) => {
+  const scores = JSON.parse(fs.readFileSync(scoresFile));
+  const phone = req.params.phone;
+
+  scores.clients[phone] ??= { ok: 0, ko: 0 };
+
+  const s = computeScore(scores.clients[phone]);
+  res.json({ score: s, badge: badge(s) });
+});
+
+/* =========================
+   GET VENDEUR SCORE (CLIENT)
+========================= */
+app.get("/score/vendeur/:id", (req, res) => {
+  const scores = JSON.parse(fs.readFileSync(scoresFile));
+  const id = req.params.id;
+
+  scores.vendeurs[id] ??= { ok: 0, ko: 0 };
+
+  const s = computeScore(scores.vendeurs[id]);
+  res.json({ score: s, badge: badge(s) });
+});
+
+/* =========================
+   CREATE TRANSACTION
 ========================= */
 app.post(
   "/create-confirmation",
   upload.single("productPhoto"),
   (req, res) => {
-
     const { clientName, clientPhone, productRef, amount, description } = req.body;
 
-    if (!clientName || !clientPhone || !productRef || !amount) {
-      return res.status(400).json({
-        success: false,
-        message: "Champs obligatoires manquants"
-      });
-    }
-
-    if (!/^\d{10}$/.test(clientPhone)) {
-      return res.status(400).json({
-        success: false,
-        message: "Téléphone invalide"
-      });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "Photo du produit obligatoire"
-      });
-    }
+    if (!clientName || !clientPhone || !productRef || !amount)
+      return res.json({ success: false });
 
     const transactions = JSON.parse(fs.readFileSync(transactionsFile));
+    const scores = JSON.parse(fs.readFileSync(scoresFile));
+
+    scores.clients[clientPhone] ??= { ok: 0, ko: 0 };
+
+    const clientScore = computeScore(scores.clients[clientPhone]);
+    const clientBadge = badge(clientScore);
 
     const transactionId = Date.now().toString();
 
     const transaction = {
       transactionId,
+      vendeurId: "default-vendeur",
       clientName,
       clientPhone,
       productRef,
       amount,
       description,
-      photo: "/uploads/" + req.file.filename,
+      photo: req.file ? "/uploads/" + req.file.filename : null,
       paymentMethod: null,
       attachment: null,
-      confirmed: false
+      confirmed: false,
+      clientScore,
+      clientBadge
     };
 
     transactions.push(transaction);
     fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
 
-    const clientLink = `${req.headers.origin}/client.html?id=${transactionId}`;
-    res.json({ success: true, clientLink });
+    const link = `${req.headers.origin}/client.html?id=${transactionId}`;
+    res.json({ success: true, clientLink: link });
   }
 );
 
 /* =========================
-   LECTURE COMMANDE (CLIENT)
+   GET TRANSACTION (CLIENT)
 ========================= */
 app.get("/transaction/:id", (req, res) => {
   const transactions = JSON.parse(fs.readFileSync(transactionsFile));
-  const transaction = transactions.find(
-    t => t.transactionId === req.params.id
-  );
+  const scores = JSON.parse(fs.readFileSync(scoresFile));
 
-  if (!transaction) {
-    return res.json({ success: false });
-  }
+  const t = transactions.find(x => x.transactionId === req.params.id);
+  if (!t) return res.json({ success: false });
 
-  res.json({ success: true, transaction });
+  scores.vendeurs[t.vendeurId] ??= { ok: 0, ko: 0 };
+
+  const vendeurScore = computeScore(scores.vendeurs[t.vendeurId]);
+
+  t.vendorScore = vendeurScore;
+  t.vendorBadge = badge(vendeurScore);
+
+  res.json({ success: true, transaction: t });
 });
 
 /* =========================
-   CONFIRMATION CLIENT
+   CONFIRM TRANSACTION
 ========================= */
 app.post(
   "/confirm-transaction/:id",
   upload.single("attachment"),
   (req, res) => {
-
-    const { paymentMethod } = req.body;
     const transactions = JSON.parse(fs.readFileSync(transactionsFile));
-    const transaction = transactions.find(
-      t => t.transactionId === req.params.id
-    );
+    const scores = JSON.parse(fs.readFileSync(scoresFile));
 
-    if (!transaction) {
-      return res.json({ success: false, message: "Commande introuvable" });
-    }
+    const t = transactions.find(x => x.transactionId === req.params.id);
+    if (!t) return res.json({ success: false });
 
-    if (transaction.confirmed) {
+    if (t.confirmed)
       return res.json({ success: false, message: "Déjà confirmée" });
-    }
 
-    if (!paymentMethod) {
-      return res.json({ success: false, message: "Mode de paiement requis" });
-    }
+    t.confirmed = true;
+    t.paymentMethod = req.body.paymentMethod;
 
-    if (paymentMethod !== "especes" && !req.file) {
-      return res.json({
-        success: false,
-        message: "Justificatif requis"
-      });
-    }
+    if (req.file)
+      t.attachment = "/uploads/" + req.file.filename;
 
-    transaction.paymentMethod = paymentMethod;
-    transaction.confirmed = true;
+    scores.clients[t.clientPhone] ??= { ok: 0, ko: 0 };
+    scores.vendeurs[t.vendeurId] ??= { ok: 0, ko: 0 };
 
-    if (req.file) {
-      transaction.attachment = "/uploads/" + req.file.filename;
-    }
+    scores.clients[t.clientPhone].ok++;
+    scores.vendeurs[t.vendeurId].ok++;
 
     fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
+    fs.writeFileSync(scoresFile, JSON.stringify(scores, null, 2));
+
     res.json({ success: true });
   }
 );
 
 /* =========================
-   LISTE COMMANDES
+   SERVER
 ========================= */
-app.get("/transactions", (req, res) => {
-  const transactions = JSON.parse(fs.readFileSync(transactionsFile));
-  res.json({ success: true, transactions });
-});
-
-/* =========================
-   SERVEUR
-========================= */
-app.listen(PORT, () => {
-  console.log("✅ Confirmi en ligne : http://localhost:3000");
-});
+app.listen(PORT, () =>
+  console.log("✅ Confirmi ON → http://localhost:3000")
+);
