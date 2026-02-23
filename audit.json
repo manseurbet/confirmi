@@ -1,0 +1,12 @@
+{
+  "vendeurs": {
+    "vendeur_001": {
+      "commandes": 3
+    }
+  },
+  "clients": {
+    "0550123456": {
+      "confirmations": 2
+    }
+  }
+}

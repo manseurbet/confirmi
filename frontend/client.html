@@ -4,177 +4,136 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Confirmi – تأكيد الطلب</title>
+
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;}
 .container{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
 .box{max-width:500px;width:100%;background:#0b1220;border-radius:16px;padding:32px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
-h1{font-size:28px;margin-bottom:12px;}
-h1 span{color:#22c55e;}
-p{font-size:15px;line-height:1.5;opacity:.9;margin-bottom:26px;}
 .form-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .form-row label{flex:0 0 35%;text-align:left;font-weight:bold;}
-.form-row input, .form-row select{flex:1;padding:10px;border-radius:6px;border:none;font-size:14px;box-sizing:border-box;background:#122135;color:#fff;}
-.form-row input[readonly]{background:#0b1220;color:#fff;}
-#productImage{width:100%;border-radius:12px;margin-bottom:20px;}
-button{width:100%;padding:12px;background:#22c55e;color:#022c22;border:none;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer;}
-button:hover{background:#16a34a;}
-.header-logo{text-align:center;margin-bottom:20px;}
-.header-logo img{width:200px;max-width:80%;}
-#vendorScoreDiv{margin-bottom:15px;font-size:14px;text-align:center;}
+.form-row input,.form-row select{flex:1;padding:10px;border-radius:6px;border:none;background:#122135;color:#fff;}
+.form-row input[readonly]{background:#0b1220;}
+#productImage{width:100%;border-radius:12px;margin-bottom:15px;}
+button{width:100%;padding:12px;background:#22c55e;color:#022c22;border:none;border-radius:10px;font-size:16px;font-weight:bold;}
+#vendorScoreBox{margin-bottom:15px;font-size:14px;}
 #attachmentRow{display:none;}
 </style>
 </head>
+
 <body>
-
 <div class="container">
-  <div class="box">
-    <div class="header-logo">
-      <img src="logo.png" alt="Confirmi">
-    </div>
+<div class="box">
 
-    <p>تأكد من المعلومات قبل الإرسال • </p>
+<img src="logo.png" style="width:180px;margin-bottom:15px">
 
-    <!-- Score du vendeur -->
-    <div id="vendorScoreDiv">⭐ تقييم البائع: <span id="vendorScore">0</span></div>
+<div id="vendorScoreBox">
+⭐ تقييم البائع: <span id="vendorScore">—</span>
+</div>
 
-    <img id="productImage" src="" alt="صورة المنتج">
+<img id="productImage">
 
-    <form id="clientForm" enctype="multipart/form-data">
-      <div class="form-row">
-        <label>👤 اسم الزبون</label>
-        <input type="text" id="clientName" readonly>
-      </div>
+<form id="clientForm" enctype="multipart/form-data">
 
-      <div class="form-row">
-        <label>📞 رقم الهاتف</label>
-        <input type="text" id="clientPhone" readonly>
-      </div>
+<div class="form-row">
+<label>👤 الاسم</label>
+<input id="clientName" readonly>
+</div>
 
-      <div class="form-row">
-        <label>🔖 رمز المنتج</label>
-        <input type="text" id="productRef" readonly>
-      </div>
+<div class="form-row">
+<label>📞 الهاتف</label>
+<input id="clientPhone" readonly>
+</div>
 
-      <div class="form-row">
-        <label>💰 المبلغ</label>
-        <input type="number" id="amount" readonly>
-      </div>
+<div class="form-row">
+<label>🔖 المنتج</label>
+<input id="productRef" readonly>
+</div>
 
-      <div class="form-row">
-        <label>📝 الوصف</label>
-        <input type="text" id="description" readonly>
-      </div>
+<div class="form-row">
+<label>💰 السعر</label>
+<input id="amount" readonly>
+</div>
 
-      <div class="form-row">
-        <label>💳 طريقة الدفع</label>
-        <select id="paymentMethod" required>
-          <option value="especes">عند الاستلام</option>
-          <option value="virement">تحويل بنكي</option>
-        </select>
-      </div>
+<div class="form-row">
+<label>📝 الوصف</label>
+<input id="description" readonly>
+</div>
 
-      <div class="form-row" id="attachmentRow">
-        <label>📎 إثبات الدفع</label>
-        <input type="file" id="attachment" accept="image/*">
-      </div>
+<div class="form-row">
+<label>💳 الدفع</label>
+<select id="paymentMethod">
+<option value="especes">عند الاستلام</option>
+<option value="virement">تحويل</option>
+</select>
+</div>
 
-      <button type="submit">تأكيد الطلب</button>
-    </form>
-  </div>
+<div class="form-row" id="attachmentRow">
+<label>📎 إثبات</label>
+<input type="file" id="attachment">
+</div>
+
+<button type="submit">تأكيد الطلب</button>
+</form>
+
+</div>
 </div>
 
 <script>
-// ---------- Récupération transaction ----------
-function getTransactionId(){
-  return new URLSearchParams(window.location.search).get("id");
+function getId(){
+  return new URLSearchParams(location.search).get("id");
 }
 
 async function loadTransaction(){
-  const id = getTransactionId();
-  if(!id){ alert("رقم المعاملة مفقود"); return; }
+  const id = getId();
+  if(!id) return alert("رقم المعاملة مفقود");
 
   try{
-    const res = await fetch(`/transaction/${id}`);
+    const res = await fetch("/transaction/"+id);
     const data = await res.json();
-    if(!data.success){ alert("المعاملة غير موجودة"); return; }
+    if(!data.success) return alert("المعاملة غير موجودة");
 
     const t = data.transaction;
 
-    // Remplissage formulaire
-    document.getElementById("clientName").value = t.clientName;
-    document.getElementById("clientPhone").value = t.clientPhone;
-    document.getElementById("productRef").value = t.productRef;
-    document.getElementById("amount").value = t.amount;
-    document.getElementById("description").value = t.description || "";
-    document.getElementById("productImage").src = t.photo || "";
-    document.getElementById("paymentMethod").value = t.paymentMethod || "especes";
+    clientName.value = t.clientName;
+    clientPhone.value = t.clientPhone;
+    productRef.value = t.productRef;
+    amount.value = t.amount;
+    description.value = t.description || "";
+    productImage.src = t.photo || "";
 
-    // Affichage score vendeur
-    if(t.vendorScore !== undefined && t.vendorBadge !== undefined){
-      document.getElementById("vendorScore").innerText = `${t.vendorScore} ⭐ (${t.vendorBadge})`;
+    if(t.vendorScore !== undefined){
+      vendorScore.innerText = `${t.vendorScore} ⭐ (${t.vendorBadge})`;
     }
 
-  }catch(err){ console.error(err); alert("خطأ أثناء تحميل المعاملة"); }
+  }catch(e){
+    alert("خطأ أثناء تحميل المعاملة");
+    console.error(e);
+  }
 }
 
 loadTransaction();
 
-// ---------- Gestion pièce jointe ----------
-const paymentSelect = document.getElementById("paymentMethod");
-const attachmentRow = document.getElementById("attachmentRow");
+/* paiement */
+paymentMethod.onchange = ()=>{
+  attachmentRow.style.display =
+    paymentMethod.value==="virement" ? "flex" : "none";
+};
 
-function toggleAttachment(){
-  if(paymentSelect.value === "virement"){
-    attachmentRow.style.display = "flex";
-    document.getElementById("attachment").required = true;
-  } else {
-    attachmentRow.style.display = "none";
-    document.getElementById("attachment").required = false;
-  }
-}
-
-paymentSelect.addEventListener("change", toggleAttachment);
-toggleAttachment();
-
-// ---------- Confirmation ----------
-document.getElementById("clientForm").addEventListener("submit", async (e)=>{
+/* confirmation */
+clientForm.onsubmit = async e=>{
   e.preventDefault();
-  const id = getTransactionId();
-  if(!id){ alert("رقم المعاملة مفقود"); return; }
+  const id = getId();
 
-  const payment = paymentSelect.value;
-  const file = document.getElementById("attachment").files[0];
+  const fd = new FormData();
+  fd.append("paymentMethod", paymentMethod.value);
+  if(attachment.files[0]) fd.append("attachment", attachment.files[0]);
 
-  if(payment === "virement" && !file){
-    alert("الرجاء إرفاق إثبات الدفع.");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("paymentMethod", payment);
-  if(file) formData.append("attachment", file);
-
-  try{
-    const res = await fetch(`/confirm-transaction/${id}`,{
-      method:"POST",
-      body:formData
-    });
-    const data = await res.json();
-    if(data.success){
-      alert("تم تأكيد العملية بنجاح 👍!");
-      paymentSelect.disabled = true;
-      document.getElementById("attachment").disabled = true;
-    } else {
-      alert("خطأ: " + data.message);
-    }
-  }catch(err){ console.error(err); alert("خطأ فى إرسال التأكيد!"); }
-});
+  const r = await fetch("/confirm-transaction/"+id,{method:"POST",body:fd});
+  const d = await r.json();
+  if(d.success) alert("تم التأكيد بنجاح ✅");
+  else alert(d.message);
+};
 </script>
 
 </body>
 </html>
-
-
-
-
-

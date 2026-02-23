@@ -46,10 +46,9 @@ const upload = multer({
 ========================= */
 function computeScore(obj) {
   const total = obj.ok + obj.ko;
-  if (total === 0) return 100;
+  if (total === 0) return 0; // 👈 clé
   return Math.round((obj.ok / total) * 100);
 }
-
 function badge(score) {
   if (score >= 80) return "🟢 موثوق";
   if (score >= 50) return "🟠 متوسط";
@@ -65,23 +64,31 @@ app.get("/score/client/:phone", (req, res) => {
 
   scores.clients[phone] ??= { ok: 0, ko: 0 };
 
-  const s = computeScore(scores.clients[phone]);
-  res.json({ score: s, badge: badge(s) });
-});
+  const score = computeScore(scores.clients[phone]);
+  const badgeText = badge(score);
 
+  res.json({
+    score,
+    badge: badgeText
+  });
+});
 /* =========================
    GET VENDEUR SCORE (CLIENT)
 ========================= */
-app.get("/score/vendeur/:id", (req, res) => {
+app.get("/score/client/:phone", (req, res) => {
   const scores = JSON.parse(fs.readFileSync(scoresFile));
-  const id = req.params.id;
+  const phone = req.params.phone;
 
-  scores.vendeurs[id] ??= { ok: 0, ko: 0 };
+  scores.clients[phone] ??= { ok: 0, ko: 0 };
 
-  const s = computeScore(scores.vendeurs[id]);
-  res.json({ score: s, badge: badge(s) });
+  const score = computeScore(scores.clients[phone]);
+  const badgeText = badge(score);
+
+  res.json({
+    score,
+    badge: badgeText
+  });
 });
-
 /* =========================
    CREATE TRANSACTION
 ========================= */
@@ -136,19 +143,24 @@ app.get("/transaction/:id", (req, res) => {
   const scores = JSON.parse(fs.readFileSync(scoresFile));
 
   const t = transactions.find(x => x.transactionId === req.params.id);
-  if (!t) return res.json({ success: false });
+  if (!t) {
+    return res.json({ success: false });
+  }
 
+  // sécurité
   scores.vendeurs[t.vendeurId] ??= { ok: 0, ko: 0 };
 
   const vendeurScore = computeScore(scores.vendeurs[t.vendeurId]);
+  const vendeurBadge = badge(vendeurScore);
 
-  t.vendorScore = vendeurScore;
-  t.vendorBadge = badge(vendeurScore);
-
-  res.json({ success: true, transaction: t });
-});
-
-/* =========================
+  // IMPORTANT : on renvoie exactement ce que le client lit
+  res.json({
+    success: true,
+    transaction: t,
+    vendorScore: vendeurScore,
+    vendorBadge: vendeurBadge
+  });
+});/* =========================
    CONFIRM TRANSACTION
 ========================= */
 app.post(
@@ -184,8 +196,66 @@ app.post(
 );
 
 /* =========================
-   SERVER
+   LISTE COMMANDES
 ========================= */
-app.listen(PORT, () =>
-  console.log("✅ Confirmi ON → http://localhost:3000")
-);
+app.get("/transactions", (req, res) => {
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile));
+  res.json({ success: true, transactions });
+});
+
+
+/* =========================
+   ADMIN DASHBOARD 
+========================= */
+app.get("/admin/dashboard", (req, res) => {
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile));
+  const audit = JSON.parse(fs.readFileSync(auditFile));
+
+  const vendeurs = {};
+  const clients = {};
+
+  let confirmed = 0;
+
+  transactions.forEach(t => {
+    if (t.confirmed) confirmed++;
+
+    // vendeur
+    vendeurs[t.vendeurId] ??= { total: 0 };
+    vendeurs[t.vendeurId].total++;
+
+    // client
+    clients[t.clientPhone] ??= { confirmed: 0 };
+    if (t.confirmed) clients[t.clientPhone].confirmed++;
+  });
+
+  for (const id in vendeurs) {
+    const s = Math.min(100, vendeurs[id].total * 10);
+    vendeurs[id].score = s;
+    vendeurs[id].badge = s >= 80 ? "موثوق" : s >= 40 ? "متوسط" : "خطر";
+  }
+
+  for (const p in clients) {
+    const s = Math.min(100, clients[p].confirmed * 20);
+    clients[p].score = s;
+    clients[p].badge = s >= 80 ? "موثوق" : s >= 40 ? "متوسط" : "خطر";
+  }
+
+  res.json({
+    success: true,
+    stats: {
+      total: transactions.length,
+      confirmed
+    },
+    vendeurs,
+    clients,
+    transactions
+  });
+});
+
+
+/* =========================
+   SERVEUR
+========================= */
+app.listen(PORT, () => {
+  console.log("✅ Confirmi en ligne : http://localhost:3000");
+});
