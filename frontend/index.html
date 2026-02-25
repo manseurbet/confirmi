@@ -28,13 +28,8 @@ body{
   text-align:center;
   box-shadow:0 20px 60px rgba(0,0,0,0.4);
 }
-h1{
-  font-size:28px;
-  margin-bottom:12px;
-}
-h1 span{ color:#22c55e; }
 p{
-  font-size:15px;
+  font-size:20px;
   line-height:1.5;
   opacity:.9;
   margin-bottom:26px;
@@ -55,7 +50,7 @@ ul li{
   text-decoration:none;
   padding:14px;
   border-radius:10px;
-  font-size:16px;
+  font-size:20px;
   font-weight:bold;
 }
 .btn:hover{ background:#16a34a; }
@@ -70,7 +65,7 @@ ul li{
   margin-bottom:20px;
 }
 .header-logo img {
-  width:180px;
+  width:280px;
   max-width:80%;
 }
 </style>
@@ -84,24 +79,28 @@ ul li{
       <img src="logo.png" alt="Confirmi">
     </div>
 
-    <h1>Confirmi <span>✓</span></h1>
 
     <p>
       تأكد من الطلب قبل الإرسال.<br>
-      لا شحن… لا إرجاع… لا خسائر.
-    </p>
+      لا نقل… لا إرجاع… لا خسائر.
 
-    <ul>
-      <li>📸 صورة المنتج + السعر</li>
-      <li>📲 تأكيد مباشر من الزبون</li>
-      <li>💬 عبر WhatsApp أو SMS</li>
-    </ul>
 
-    <a href="/vendeur.html" class="btn">ابدأ الآن</a>
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+      <a href="/vendeur.html" class="btn">📦 إستمارة البائع</a>
+      <a href="/transactions.html" class="btn" style="background: #334155; color: white;">🧾 قائمة المعاملات</a>
+      <a href="/admin.html" class="btn" style="background: #1e1b4b; color: white;">📊   الاحصائيات</a>
+    </div>
+
 
     <div class="note">
       بدون تطبيق • بدون تعقيد • يعمل فورًا
     </div>
+    </p>
+    <ul>
+      <li>📲ارسل الرابط مباشرة الى الزبون عبر </li>
+      <li>💬 WhatsApp أو SMS</li>
+    </ul>
+
 
   </div>
 </div>
