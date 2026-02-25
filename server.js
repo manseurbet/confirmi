@@ -8,7 +8,7 @@ const PORT = 3000;
 
 /* =========================
    MIDDLEWARES
-========================= */
+   ========================= */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "frontend")));
@@ -16,9 +16,10 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* =========================
    FILES
-========================= */
+   ========================= */
 const transactionsFile = path.join(__dirname, "transactions.json");
 const scoresFile = path.join(__dirname, "scores.json");
+const auditFile = path.join(__dirname, "audit.json");
 
 if (!fs.existsSync(transactionsFile))
   fs.writeFileSync(transactionsFile, JSON.stringify([], null, 2));
@@ -29,9 +30,12 @@ if (!fs.existsSync(scoresFile))
     JSON.stringify({ clients: {}, vendeurs: {} }, null, 2)
   );
 
+if (!fs.existsSync(auditFile))
+  fs.writeFileSync(auditFile, JSON.stringify([], null, 2));
+
 /* =========================
    MULTER
-========================= */
+   ========================= */
 const upload = multer({
   storage: multer.diskStorage({
     destination: "uploads",
@@ -43,10 +47,10 @@ const upload = multer({
 
 /* =========================
    SCORE HELPERS
-========================= */
+   ========================= */
 function computeScore(obj) {
   const total = obj.ok + obj.ko;
-  if (total === 0) return 0; // 👈 clé
+  if (total === 0) return 0;
   return Math.round((obj.ok / total) * 100);
 }
 function badge(score) {
@@ -57,7 +61,7 @@ function badge(score) {
 
 /* =========================
    GET CLIENT SCORE (VENDEUR)
-========================= */
+   ========================= */
 app.get("/score/client/:phone", (req, res) => {
   const scores = JSON.parse(fs.readFileSync(scoresFile));
   const phone = req.params.phone;
@@ -72,16 +76,17 @@ app.get("/score/client/:phone", (req, res) => {
     badge: badgeText
   });
 });
+
 /* =========================
    GET VENDEUR SCORE (CLIENT)
-========================= */
-app.get("/score/client/:phone", (req, res) => {
+   ========================= */
+app.get("/score/vendeur/:phone", (req, res) => {
   const scores = JSON.parse(fs.readFileSync(scoresFile));
   const phone = req.params.phone;
 
-  scores.clients[phone] ??= { ok: 0, ko: 0 };
+  scores.vendeurs[phone] ??= { ok: 0, ko: 0 };
 
-  const score = computeScore(scores.clients[phone]);
+  const score = computeScore(scores.vendeurs[phone]);
   const badgeText = badge(score);
 
   res.json({
@@ -89,9 +94,10 @@ app.get("/score/client/:phone", (req, res) => {
     badge: badgeText
   });
 });
+
 /* =========================
    CREATE TRANSACTION
-========================= */
+   ========================= */
 app.post(
   "/create-confirmation",
   upload.single("productPhoto"),
@@ -137,7 +143,7 @@ app.post(
 
 /* =========================
    GET TRANSACTION (CLIENT)
-========================= */
+   ========================= */
 app.get("/transaction/:id", (req, res) => {
   const transactions = JSON.parse(fs.readFileSync(transactionsFile));
   const scores = JSON.parse(fs.readFileSync(scoresFile));
@@ -147,22 +153,22 @@ app.get("/transaction/:id", (req, res) => {
     return res.json({ success: false });
   }
 
-  // sécurité
   scores.vendeurs[t.vendeurId] ??= { ok: 0, ko: 0 };
 
   const vendeurScore = computeScore(scores.vendeurs[t.vendeurId]);
   const vendeurBadge = badge(vendeurScore);
 
-  // IMPORTANT : on renvoie exactement ce que le client lit
   res.json({
     success: true,
     transaction: t,
     vendorScore: vendeurScore,
     vendorBadge: vendeurBadge
   });
-});/* =========================
+});
+
+/* =========================
    CONFIRM TRANSACTION
-========================= */
+   ========================= */
 app.post(
   "/confirm-transaction/:id",
   upload.single("attachment"),
@@ -197,20 +203,18 @@ app.post(
 
 /* =========================
    LISTE COMMANDES
-========================= */
+   ========================= */
 app.get("/transactions", (req, res) => {
   const transactions = JSON.parse(fs.readFileSync(transactionsFile));
   res.json({ success: true, transactions });
 });
 
-
 /* =========================
    ADMIN DASHBOARD 
-========================= */
+   ========================= */
 app.get("/admin/dashboard", (req, res) => {
   const transactions = JSON.parse(fs.readFileSync(transactionsFile));
-  const audit = JSON.parse(fs.readFileSync(auditFile));
-
+  
   const vendeurs = {};
   const clients = {};
 
@@ -219,11 +223,9 @@ app.get("/admin/dashboard", (req, res) => {
   transactions.forEach(t => {
     if (t.confirmed) confirmed++;
 
-    // vendeur
     vendeurs[t.vendeurId] ??= { total: 0 };
     vendeurs[t.vendeurId].total++;
 
-    // client
     clients[t.clientPhone] ??= { confirmed: 0 };
     if (t.confirmed) clients[t.clientPhone].confirmed++;
   });
@@ -252,10 +254,9 @@ app.get("/admin/dashboard", (req, res) => {
   });
 });
 
-
 /* =========================
    SERVEUR
-========================= */
-app.listen(PORT, () => {
-  console.log("✅ Confirmi en ligne : http://localhost:3000");
+   ========================= */
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Confirmi en ligne : port ${PORT}`);
 });
