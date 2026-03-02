@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Confirmi – صفحة البائع</title>
@@ -24,6 +25,7 @@ button:hover{ background:#16a34a; }
 .btn-whatsapp { background:#25d366; color:#fff; margin-top:10px; }
 .btn-sms { background:#0ea5e9; color:#fff; margin-top:10px; }
 </style>
+</head>
 <body>
 <div class="container">
   <div class="box">
@@ -95,77 +97,6 @@ document.getElementById('orderForm').onsubmit = async (e) => {
 function copyLink() { navigator.clipboard.writeText(document.getElementById("finalLink").value); alert("تم النسخ!"); }
 function sendWhatsApp() { window.open(`https://wa.me/?text=${encodeURIComponent("تأكيد الطلب: " + document.getElementById("finalLink").value)}`, '_blank'); }
 function sendSMS() { window.location.href = `sms:?body=${encodeURIComponent("تأكيد الطلب: " + document.getElementById("finalLink").value)}`; }
-</script>
-</body>
-</html>
-<html lang="fr">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmi – Nouvelle Commande</title>
-    <style>
-        body{ margin:0; font-family:Arial, sans-serif; background:#0f172a; color:#fff; display:flex; justify-content:center; padding:20px; }
-        .box{ max-width:400px; width:100%; background:#1e293b; padding:20px; border-radius:12px; }
-        h1{ text-align:center; color:#38bdf8; }
-        form{ display:flex; flex-direction:column; gap:15px; }
-        label{ font-size:14px; color:#94a3b8; }
-        input, textarea{ padding:10px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#fff; }
-        button{ padding:12px; background:#38bdf8; color:#0f172a; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
-        button:hover{ background:#0ea5e9; }
-        #result{ margin-top:20px; padding:15px; background:#122135; border-radius:8px; display:none; word-break:break-all; }
-    </style>
-<body>
-<div class="box">
-    <h1>📦 Nouvelle Commande</h1>
-    <form id="orderForm">
-        <label>Nom du Client</label>
-        <input type="text" name="clientName" required>
-        <label>Téléphone Client</label>
-        <input type="text" name="clientPhone" id="clientPhone" required>
-        <div id="clientScoreInfo" style="font-size:12px; margin-top:-10px;"></div>
-        <label>Référence Produit</label>
-        <input type="text" name="productRef" required>
-        <label>Montant (DZD)</label>
-        <input type="number" name="amount" required>
-        <label>Description (optionnel)</label>
-        <textarea name="description"></textarea>
-        <label>Photo du Produit</label>
-        <input type="file" name="productPhoto" accept="image/*">
-        <button type="submit">Générer le lien de confirmation</button>
-    </form>
-    <div id="result">
-        <p>Lien à envoyer au client :</p>
-        <strong id="clientLink"></strong>
-        <button onclick="copyLink()" style="margin-top:10px; width:100%; background:#22c55e;">Copier le lien</button>
-    </div>
-</div>
-<script>
-    const phoneInput = document.getElementById('clientPhone');
-    phoneInput.addEventListener('blur', async () => {
-        if(phoneInput.value){
-            const res = await fetch(`/score/client/${phoneInput.value}`);
-            const data = await res.json();
-            document.getElementById('clientScoreInfo').innerHTML = `Score Client: ${data.score}% ${data.badge}`;
-        }
-    });
-
-    document.getElementById('orderForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const res = await fetch('/create-confirmation', { method: 'POST', body: formData });
-        const data = await res.json();
-        if(data.success){
-            document.getElementById('result').style.display = 'block';
-            document.getElementById('clientLink').innerText = data.clientLink;
-        } else {
-            alert("Erreur lors de la création");
-        }
-    };
-
-    function copyLink(){
-        const link = document.getElementById('clientLink').innerText;
-        navigator.clipboard.writeText(link);
-        alert("Lien copié !");
-    }
 </script>
 </body>
 </html>
