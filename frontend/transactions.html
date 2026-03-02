@@ -1,143 +1,83 @@
 <!DOCTYPE html>
+<html lang="fr" dir="rtl">
 <html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Liste des transactions</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f6f8;
-      padding: 30px;
-    }
-    h2 { color: #007bff; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      text-align: center;
-    }
-    th { background: #007bff; color: white; }
-    a { color: #007bff; text-decoration: none; }
-/* =========================
-   MODE TÉLÉPHONE
-========================= */
-@media (max-width: 700px) {
-
-  body {
-    padding: 10px;
-  }
-
-  h2 {
-    text-align: center;
-    font-size: 18px;
-  }
-
-  table, thead, tbody, th, td, tr {
-    display: block;
-  }
-
-  thead {
-    display: none;
-  }
-
-  tr {
-    margin-bottom: 15px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    padding: 10px;
-  }
-
-  td {
-    text-align: left;
-    padding: 6px 10px;
-    border: none;
-    position: relative;
-  }
-
-  td::before {
-    content: attr(data-label);
-    font-weight: bold;
-    display: block;
-    color: #555;
-    margin-bottom: 2px;
-  }
-}
-
-  </style>
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmi – Mes Transactions</title>
+    <style>
+        body{ margin:0; font-family:Arial, sans-serif; background:#0f172a; color:#fff; padding:20px; text-align: right;}
+        .container{ max-width:800px; margin:0 auto; }
+        h1{ text-align:center; color:#38bdf8; }
+        .card{ background:#1e293b; padding:15px; border-radius:10px; margin-bottom:15px; border-left:5px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .card.confirmed{ border-left-color:#22c55e; }
+        .content-area { flex-grow: 1; }
+        .status{ font-weight:bold; }
+        .details{ font-size:14px; color:#94a3b8; }
+        .btn-view { background: #38bdf8; color: #0f172a; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: bold; }
+        .btn-home { background: #334155; color: white; margin-bottom: 20px; padding: 10px; border-radius: 8px; border: none; cursor: pointer; }
+        body{ margin:0; font-family:Arial, sans-serif; background:#0f172a; color:#fff; padding:20px; }
+        .container{ max-width:800px; margin:0 auto; }
+        h1{ text-align:center; color:#38bdf8; }
+        .card{ background:#1e293b; padding:15px; border-radius:10px; margin-bottom:15px; border-left:5px solid #334155; }
+        .card.confirmed{ border-left-color:#22c55e; }
+        .header{ display:flex; justify-content:space-between; margin-bottom:10px; }
+        .status{ font-weight:bold; }
+        .details{ font-size:14px; color:#94a3b8; }
+    </style>
 <body>
-
-<h2> قائمة المعاملات  Confirmi</h2>
-
-<table>
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Client</th>
-      <th>Telephone</th>
-
-      <th>Produit</th>
-      <th>Montant</th>
-      <th>Mode paiement</th>
-      <th>Preuve</th>
-      <th>Statut</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody id="transactionsBody"></tbody>
-</table>
-
+<div class="container">
+    <button class="btn-home" onclick="location.href='/'">🏠 العودة للرئيسية</button>
+    <h1>🧾 قائمة المعاملات</h1>
+    <div id="transactionsList">Chargement...</div>
+</div>
 <script>
-async function loadTransactions() {
-  try {
+const sellerId = localStorage.getItem('sellerId');
+async function loadTransactions(){
+    if(!sellerId) return document.getElementById('transactionsList').innerText = 'لم يتم العثور على هوية البائع';
+    const res = await fetch('/transactions/' + sellerId);
+    const data = await res.json();
+    const list = document.getElementById('transactionsList');
+    list.innerHTML = '';
+    if(data.transactions.length === 0) list.innerHTML = 'لا توجد معاملات.';
+    <h1>🧾 Liste des Transactions</h1>
+    <div id="transactionsList">Chargement...</div>
+</div>
+<script>
+async function loadTransactions(){
     const res = await fetch('/transactions');
     const data = await res.json();
-
-    if (!data.success) {
-      alert('Erreur lors du chargement');
-      return;
-    }
-
-    const tbody = document.getElementById('transactionsBody');
-    tbody.innerHTML = '';
-
-    data.transactions.forEach(t => {
-      const tr = document.createElement('tr');
-  const preuve = t.attachment
-    ? `<a href="/uploads/${t.attachment}" target="_blank">Télécharger</a>`
-    : "—";
-     tr.innerHTML = `
-  <td data-label="ID">${t.transactionId}</td>
-  <td data-label="Client">${t.clientName}</td>
-   <td data-label="Telephone">${t.clientPhone}</td>
-
-  <td data-label="Produit">${t.productRef}</td>
-  <td data-label="Montant">${t.amount} DA</td>
-  <td data-label="Paiement">${t.paymentMethod || '-'}</td>
-  <td data-label="Preuve">${preuve}</td>
-  <td data-label="Statut">${t.confirmed ? 'Confirmée' : 'En attente'}</td>
-  <td data-label="Action">
-    <a href="/client.html?id=${t.transactionId}" target="_blank">Voir</a>
-  </td>
-`;
-
-      tbody.appendChild(tr);
+    const list = document.getElementById('transactionsList');
+    list.innerHTML = '';
+    if(data.transactions.length === 0) list.innerHTML = 'Aucune transaction.';
+    data.transactions.reverse().forEach(t => {
+        const div = document.createElement('div');
+        div.className = `card ${t.confirmed ? 'confirmed' : ''}`;
+        div.innerHTML = `
+            <div class="content-area">
+                <div class="status">${t.confirmed ? '✅ مؤكدة' : '⏳ قيد الانتظار'}</div>
+                <div class="details">
+                    <div>👤 الزبون: ${t.clientName}</div>
+                    <div>📞 الهاتف: ${t.clientPhone}</div>
+                    <div>📦 المنتج: ${t.productRef}</div>
+                    <div>💰 السعر: ${t.amount} دج</div>
+                    ${t.confirmed && t.attachment ? `<div>📎 <a href="${t.attachment}" target="_blank" style="color: #38bdf8; text-decoration: none;">تحميل وصل التأكيد</a></div>` : ''}
+                </div>
+            </div>
+            <div class="actions"><a href="/client.html?id=${t.transactionId}" class="btn-view" target="_blank">عرض</a></div>
+            <div class="header">
+                <strong>ID: ${t.transactionId}</strong>
+                <span class="status">${t.confirmed ? '✅ Confirmée' : '⏳ En attente'}</span>
+            </div>
+            <div class="details">
+                Client: ${t.clientName} (${t.clientPhone})<br>
+                Produit: ${t.productRef} - Montant: ${t.amount} DZD<br>
+                ${t.paymentMethod ? 'Paiement: ' + t.paymentMethod : ''}
+            </div>
+        `;
+        list.appendChild(div);
     });
-
-  } catch (e) {
-    console.error(e);
-    alert('Erreur serveur');
-  }
 }
-
 loadTransactions();
 </script>
-
 </body>
 </html>
-
