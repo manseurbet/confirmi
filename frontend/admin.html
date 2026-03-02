@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<html lang="fr">
-application)
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirmi – Admin</title>
     <style>
         body{ margin:0; font-family:Arial, sans-serif; background:#0f172a; color:#fff; text-align: right;}
-        body{ margin:0; font-family:Arial, sans-serif; background:#0f172a; color:#fff; }
         .container{ padding:20px; }
         h1{ text-align:center; margin-bottom:20px; }
         .section{ background:#0b1220; border-radius:12px; padding:15px; margin-bottom:20px; }
@@ -18,10 +16,8 @@ application)
         th, td{ border-bottom:1px solid #1e293b; padding:8px; text-align:center; font-size:14px; }
         th{ background:#122135; }
         .btn-home { background: #334155; color: white; margin-bottom: 20px; padding: 10px; border-radius: 8px; border: none; cursor: pointer; }
-        .badge-good{color:#22c55e;}
-        .badge-mid{color:#facc15;}
-        .badge-bad{color:#ef4444;}
     </style>
+</head>
 <body>
 <div class="container">
     <button class="btn-home" onclick="location.href='/'">🏠 العودة للرئيسية</button>
@@ -36,34 +32,7 @@ application)
     <div class="section">
         <h2>👥 الزبائن</h2>
         <table id="clientsTable">
-           <tr><th>الهاتف</th><th>تأكيدات</th><th>التقييم</th></tr>
-    <h1>📊 Tableau Admin – Confirmi</h1>
-    <div class="section">
-        <h2>📦 Statistiques globales</h2>
-        <div class="stats">
-            <div class="stat"><div>Commandes totales</div><strong id="totalCmd">0</strong></div>
-            <div class="stat"><div>Confirmées</div><strong id="confirmedCmd">0</strong></div>
-            <div class="stat"><div>Non confirmées</div><strong id="pendingCmd">0</strong></div>
-        </div>
-    </div>
-    <div class="section">
-        <h2>🧑‍💼 Vendeurs</h2>
-        <table id="vendorsTable">
-            <thead><tr><th>Vendeur ID</th><th>Commandes</th><th>Score</th><th>Badge</th></tr></thead>
-            <tbody></tbody>
-        </table>
-    </div>
-    <div class="section">
-        <h2>👥 Clients</h2>
-        <table id="clientsTable">
-            <thead><tr><th>Téléphone</th><th>Confirmations</th><th>Score</th><th>Badge</th></tr></thead>
-            <tbody></tbody>
-        </table>
-    </div>
-    <div class="section">
-        <h2>🧾 Dernières transactions</h2>
-        <table id="transactionsTable">
-            <thead><tr><th>ID</th><th>Client</th><th>Montant</th><th>État</th></tr>
+            <thead><tr><th>الهاتف</th><th>تأكيدات</th><th>التقييم</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
@@ -82,37 +51,6 @@ async function loadDashboard(){
         const c = data.clients[phone];
         cBody.innerHTML += `<tr><td>${phone}</td><td>${c.confirmed}</td><td>${c.score}% ${c.badge}</td></tr>`;
     }
-async function loadDashboard(){
-    try{
-        const res = await fetch("/admin/dashboard");
-        const data = await res.json();
-        if(!data.success) return alert("Erreur chargement admin");
-        document.getElementById("totalCmd").innerText = data.stats.total;
-        document.getElementById("confirmedCmd").innerText = data.stats.confirmed;
-        document.getElementById("pendingCmd").innerText = data.stats.total - data.stats.confirmed;
-        const vBody = document.querySelector("#vendorsTable tbody");
-        vBody.innerHTML = "";
-        for(const id in data.vendeurs){
-            const v = data.vendeurs[id];
-            vBody.innerHTML += `<tr><td>${id}</td><td>${v.total}</td><td>${v.score}%</td><td class="${badgeClass(v.score)}">${v.badge}</td></tr>`;
-        }
-        const cBody = document.querySelector("#clientsTable tbody");
-        cBody.innerHTML = "";
-        for(const phone in data.clients){
-            const c = data.clients[phone];
-            cBody.innerHTML += `<tr><td>${phone}</td><td>${c.confirmed}</td><td>${c.score}%</td><td class="${badgeClass(c.score)}">${c.badge}</td></tr>`;
-        }
-        const tBody = document.querySelector("#transactionsTable tbody");
-        tBody.innerHTML = "";
-        data.transactions.slice(-10).reverse().forEach(t=>{
-            tBody.innerHTML += `<tr><td>${t.transactionId}</td><td>${t.clientPhone}</td><td>${t.amount}</td><td>${t.confirmed ? "✅" : "❌"}</td></tr>`;
-        });
-    }catch(e){ console.error(e); alert("Erreur serveur admin"); }
-}
-function badgeClass(score){
-    if(score >= 80) return "badge-good";
-    if(score >= 40) return "badge-mid";
-    return "badge-bad";
 }
 loadDashboard();
 </script>
