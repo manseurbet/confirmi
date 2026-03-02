@@ -1,171 +1,123 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Confirmi – صفحة البائع</title>
-<style>
-body{margin:0;font-family:Arial, sans-serif;background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;text-align:right;}
-.container{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
-.box{max-width:500px;width:100%;background:#0b1220;border-radius:16px;padding:32px 26px;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
-h1{font-size:28px;margin-bottom:12px;text-align:center;}
-h1 span{color:#22c55e;}
-.score-card { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; border: 1px solid #334155; }
-.score-label { font-size: 14px; color: #94a3b8; margin-bottom: 5px; }
-.score-value { font-size: 24px; font-weight: bold; color: #22c55e; }
-form{ display:flex; flex-direction:column; gap:15px; }
-label{ font-weight:bold; font-size:14px; }
-input, textarea{ width:100%; padding:12px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff; font-size:14px; box-sizing:border-box; }
-button{ width:100%; padding:14px; background:#22c55e; color:#022c22; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer; transition:0.3s; }
-button:hover{ background:#16a34a; }
-.btn-home { background: #334155; color: white; margin-bottom: 20px; }
-#resultSection{ display:none; margin-top:25px; padding:20px; background:#122135; border-radius:12px; border:1px dashed #22c55e; text-align:center; }
-.link-input { background:#0b1220; border:1px solid #334155; padding:10px; border-radius:6px; margin:10px 0; width:100%; text-align:center; color:#38bdf8; font-family:monospace; }
-.btn-secondary { background:#334155; color:#fff; margin-top:10px; }
-.btn-whatsapp { background:#25d366; color:#fff; margin-top:10px; }
-.btn-sms { background:#0ea5e9; color:#fff; margin-top:10px; }
-</style>
-<body>
-<div class="container">
-  <div class="box">
-    <button class="btn-home" onclick="location.href='/'">🏠 العودة للرئيسية</button>
-    <h1>Confirmi <span>✓</span></h1>
-    <div class="score-card">
-        <div class="score-label">⭐ تقييم موثوقية الزبون:</div>
-        <div id="scoreDisplay"><span class="score-value" id="scoreNum">--</span> <span id="badgeText"></span></div>
-    </div>
-    <form id="orderForm">
-      <input type="hidden" id="sellerId">
-      <label>رقم هاتف الزبون</label>
-      <input type="tel" id="clientPhone" placeholder="0XXXXXXXXX" required>
-      <label>اسم الزبون</label>
-      <input type="text" id="clientName" required>
-      <label>رمز المنتج / اسم المنتج</label>
-      <input type="text" id="productRef" required>
-      <label>السعر (دج)</label>
-      <input type="number" id="amount" required>
-      <label>الوصف</label>
-      <textarea id="description" rows="2"></textarea>
-      <label>صورة المنتج</label>
-      <input type="file" id="productPhoto" accept="image/*">
-      <button type="submit">إنشاء رابط التأكيد</button>
-    </form>
-    <div id="resultSection">
-      <p style="color:#22c55e; font-weight:bold;">✅ تم إنشاء الرابط بنجاح!</p>
-      <input type="text" id="finalLink" class="link-input" readonly>
-      <button class="btn-secondary" onclick="copyLink()">نسخ الرابط 📋</button>
-      <button class="btn-whatsapp" onclick="sendWhatsApp()">WhatsApp 💬</button>
-      <button class="btn-sms" onclick="sendSMS()">SMS 📱</button>
-    </div>
-  </div>
-</div>
-<script>
-const sellerId = localStorage.getItem('sellerId') || 'seller_' + Math.random().toString(36).substr(2, 9);
-localStorage.setItem('sellerId', sellerId);
-document.getElementById('sellerId').value = sellerId;
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const multer = require("multer");
 
-const phoneInput = document.getElementById('clientPhone');
-phoneInput.addEventListener('input', async () => {
-    if(phoneInput.value.trim().length >= 10){
-        const res = await fetch(`/score/client/${phoneInput.value.trim()}?sellerId=${sellerId}`);
-        const data = await res.json();
-        document.getElementById('scoreNum').innerText = data.score + '%';
-        document.getElementById('badgeText').innerText = data.badge;
+const app = express();
+const PORT = 3000;
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "frontend")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+const transactionsFile = path.join(__dirname, "transactions.json");
+const scoresFile = path.join(__dirname, "scores.json");
+
+function ensureFile(file, defaultContent) {
+  if (!fs.existsSync(file) || fs.readFileSync(file, 'utf8').trim() === "") {
+    fs.writeFileSync(file, JSON.stringify(defaultContent, null, 2));
+  }
+}
+
+ensureFile(transactionsFile, []);
+ensureFile(scoresFile, { clients: {}, vendeurs: {} });
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const dir = "uploads";
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+      cb(null, Date.now() + path.extname(file.originalname));
     }
+  })
 });
 
-document.getElementById('orderForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append('sellerId', sellerId);
-    formData.append('clientName', document.getElementById('clientName').value);
-    formData.append('clientPhone', document.getElementById('clientPhone').value);
-    formData.append('productRef', document.getElementById('productRef').value);
-    formData.append('amount', document.getElementById('amount').value);
-    formData.append('description', document.getElementById('description').value);
-    const photo = document.getElementById('productPhoto').files[0];
-    if(photo) formData.append('productPhoto', photo);
-    const res = await fetch('/create-confirmation', { method: 'POST', body: formData });
-    const data = await res.json();
-    if(data.success){
-        document.getElementById('finalLink').value = data.clientLink;
-        document.getElementById('resultSection').style.display = 'block';
-    }
-};
+function computeScore(obj) {
+  if (!obj) return 0;
+  const total = (obj.ok || 0) + (obj.ko || 0);
+  if (total === 0) return 0;
+  return Math.round((obj.ok / total) * 100);
+}
 
-function copyLink() { navigator.clipboard.writeText(document.getElementById("finalLink").value); alert("تم النسخ!"); }
-function sendWhatsApp() { window.open(`https://wa.me/?text=${encodeURIComponent("تأكيد الطلب: " + document.getElementById("finalLink").value)}`, '_blank'); }
-function sendSMS() { window.location.href = `sms:?body=${encodeURIComponent("تأكيد الطلب: " + document.getElementById("finalLink").value)}`; }
-</script>
-</body>
-</html>
-<html lang="fr">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmi – Nouvelle Commande</title>
-    <style>
-        body{ margin:0; font-family:Arial, sans-serif; background:#0f172a; color:#fff; display:flex; justify-content:center; padding:20px; }
-        .box{ max-width:400px; width:100%; background:#1e293b; padding:20px; border-radius:12px; }
-        h1{ text-align:center; color:#38bdf8; }
-        form{ display:flex; flex-direction:column; gap:15px; }
-        label{ font-size:14px; color:#94a3b8; }
-        input, textarea{ padding:10px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#fff; }
-        button{ padding:12px; background:#38bdf8; color:#0f172a; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
-        button:hover{ background:#0ea5e9; }
-        #result{ margin-top:20px; padding:15px; background:#122135; border-radius:8px; display:none; word-break:break-all; }
-    </style>
-<body>
-<div class="box">
-    <h1>📦 Nouvelle Commande</h1>
-    <form id="orderForm">
-        <label>Nom du Client</label>
-        <input type="text" name="clientName" required>
-        <label>Téléphone Client</label>
-        <input type="text" name="clientPhone" id="clientPhone" required>
-        <div id="clientScoreInfo" style="font-size:12px; margin-top:-10px;"></div>
-        <label>Référence Produit</label>
-        <input type="text" name="productRef" required>
-        <label>Montant (DZD)</label>
-        <input type="number" name="amount" required>
-        <label>Description (optionnel)</label>
-        <textarea name="description"></textarea>
-        <label>Photo du Produit</label>
-        <input type="file" name="productPhoto" accept="image/*">
-        <button type="submit">Générer le lien de confirmation</button>
-    </form>
-    <div id="result">
-        <p>Lien à envoyer au client :</p>
-        <strong id="clientLink"></strong>
-        <button onclick="copyLink()" style="margin-top:10px; width:100%; background:#22c55e;">Copier le lien</button>
-    </div>
-</div>
-<script>
-    const phoneInput = document.getElementById('clientPhone');
-    phoneInput.addEventListener('blur', async () => {
-        if(phoneInput.value){
-            const res = await fetch(`/score/client/${phoneInput.value}`);
-            const data = await res.json();
-            document.getElementById('clientScoreInfo').innerHTML = `Score Client: ${data.score}% ${data.badge}`;
-        }
-    });
+function badge(score) {
+  if (score >= 80) return "🟢 موثوق";
+  if (score >= 50) return "🟠 متوسط";
+  return "🔴 غير موثوق";
+}
 
-    document.getElementById('orderForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const res = await fetch('/create-confirmation', { method: 'POST', body: formData });
-        const data = await res.json();
-        if(data.success){
-            document.getElementById('result').style.display = 'block';
-            document.getElementById('clientLink').innerText = data.clientLink;
-        } else {
-            alert("Erreur lors de la création");
-        }
-    };
+app.get("/score/client/:phone", (req, res) => {
+  const sellerId = req.query.sellerId || "default";
+  const scores = JSON.parse(fs.readFileSync(scoresFile, 'utf8'));
+  scores.vendeurs[sellerId] ??= { clients: {} };
+  const client = scores.vendeurs[sellerId].clients[req.params.phone] || { ok: 0, ko: 0 };
+  const score = computeScore(client);
+  res.json({ score, badge: badge(score) });
+});
 
-    function copyLink(){
-        const link = document.getElementById('clientLink').innerText;
-        navigator.clipboard.writeText(link);
-        alert("Lien copié !");
-    }
-</script>
-</body>
-</html>
+app.post("/create-confirmation", upload.single("productPhoto"), (req, res) => {
+  const { clientName, clientPhone, productRef, amount, description, sellerId } = req.body;
+  if (!clientName || !clientPhone || !productRef || !amount || !sellerId)
+    return res.json({ success: false, message: "Missing fields" });
+
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile, 'utf8'));
+  const transactionId = Date.now().toString();
+  const transaction = {
+    transactionId, sellerId, clientName, clientPhone, productRef, amount, description,
+    photo: req.file ? "/uploads/" + req.file.filename : null,
+    confirmed: false
+  };
+
+  transactions.push(transaction);
+  fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  res.json({ success: true, clientLink: `${protocol}://${req.headers.host}/client.html?id=${transactionId}` });
+});
+
+app.get("/transaction/:id", (req, res) => {
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile, 'utf8'));
+  const t = transactions.find(x => x.transactionId === req.params.id);
+  if (!t) return res.json({ success: false });
+  res.json({ success: true, transaction: t });
+});
+
+app.post("/confirm-transaction/:id", upload.single("attachment"), (req, res) => {
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile, 'utf8'));
+  const scores = JSON.parse(fs.readFileSync(scoresFile, 'utf8'));
+  const t = transactions.find(x => x.transactionId === req.params.id);
+  if (!t || t.confirmed) return res.json({ success: false });
+
+  t.confirmed = true;
+  t.confirmationDate = new Date().toISOString();
+  if (req.file) {
+    t.attachment = "/uploads/" + req.file.filename;
+  }
+  scores.vendeurs[t.sellerId] ??= { clients: {} };
+  scores.vendeurs[t.sellerId].clients[t.clientPhone] ??= { ok: 0, ko: 0 };
+  scores.vendeurs[t.sellerId].clients[t.clientPhone].ok++;
+
+  fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
+  fs.writeFileSync(scoresFile, JSON.stringify(scores, null, 2));
+  res.json({ success: true });
+});
+
+app.get("/transactions/:sellerId", (req, res) => {
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile, 'utf8'));
+  res.json({ success: true, transactions: transactions.filter(t => t.sellerId === req.params.sellerId) });
+});
+
+app.get("/admin/dashboard/:sellerId", (req, res) => {
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile, 'utf8')).filter(t => t.sellerId === req.params.sellerId);
+  const scores = JSON.parse(fs.readFileSync(scoresFile, 'utf8')).vendeurs[req.params.sellerId] || { clients: {} };
+  const clients = {};
+  for (const phone in scores.clients) {
+    const s = computeScore(scores.clients[phone]);
+    clients[phone] = { confirmed: scores.clients[phone].ok, score: s, badge: badge(s) };
+  }
+  res.json({ success: true, stats: { total: transactions.length, confirmed: transactions.filter(t => t.confirmed).length }, clients, transactions });
+});
+
+app.listen(PORT, "0.0.0.0", () => console.log(`✅ Confirmi port ${PORT}`));
