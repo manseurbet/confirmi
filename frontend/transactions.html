@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr" dir="rtl">
-<html lang="fr">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirmi – Mes Transactions</title>
@@ -15,15 +15,8 @@
         .details{ font-size:14px; color:#94a3b8; }
         .btn-view { background: #38bdf8; color: #0f172a; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: bold; }
         .btn-home { background: #334155; color: white; margin-bottom: 20px; padding: 10px; border-radius: 8px; border: none; cursor: pointer; }
-        body{ margin:0; font-family:Arial, sans-serif; background:#0f172a; color:#fff; padding:20px; }
-        .container{ max-width:800px; margin:0 auto; }
-        h1{ text-align:center; color:#38bdf8; }
-        .card{ background:#1e293b; padding:15px; border-radius:10px; margin-bottom:15px; border-left:5px solid #334155; }
-        .card.confirmed{ border-left-color:#22c55e; }
-        .header{ display:flex; justify-content:space-between; margin-bottom:10px; }
-        .status{ font-weight:bold; }
-        .details{ font-size:14px; color:#94a3b8; }
     </style>
+</head>
 <body>
 <div class="container">
     <button class="btn-home" onclick="location.href='/'">🏠 العودة للرئيسية</button>
@@ -39,16 +32,6 @@ async function loadTransactions(){
     const list = document.getElementById('transactionsList');
     list.innerHTML = '';
     if(data.transactions.length === 0) list.innerHTML = 'لا توجد معاملات.';
-    <h1>🧾 Liste des Transactions</h1>
-    <div id="transactionsList">Chargement...</div>
-</div>
-<script>
-async function loadTransactions(){
-    const res = await fetch('/transactions');
-    const data = await res.json();
-    const list = document.getElementById('transactionsList');
-    list.innerHTML = '';
-    if(data.transactions.length === 0) list.innerHTML = 'Aucune transaction.';
     data.transactions.reverse().forEach(t => {
         const div = document.createElement('div');
         div.className = `card ${t.confirmed ? 'confirmed' : ''}`;
@@ -64,15 +47,6 @@ async function loadTransactions(){
                 </div>
             </div>
             <div class="actions"><a href="/client.html?id=${t.transactionId}" class="btn-view" target="_blank">عرض</a></div>
-            <div class="header">
-                <strong>ID: ${t.transactionId}</strong>
-                <span class="status">${t.confirmed ? '✅ Confirmée' : '⏳ En attente'}</span>
-            </div>
-            <div class="details">
-                Client: ${t.clientName} (${t.clientPhone})<br>
-                Produit: ${t.productRef} - Montant: ${t.amount} DZD<br>
-                ${t.paymentMethod ? 'Paiement: ' + t.paymentMethod : ''}
-            </div>
         `;
         list.appendChild(div);
     });
