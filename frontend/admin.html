@@ -1,10 +1,12 @@
 <!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <html lang="fr">
-<head>
+application)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirmi – Admin</title>
     <style>
+        body{ margin:0; font-family:Arial, sans-serif; background:#0f172a; color:#fff; text-align: right;}
         body{ margin:0; font-family:Arial, sans-serif; background:#0f172a; color:#fff; }
         .container{ padding:20px; }
         h1{ text-align:center; margin-bottom:20px; }
@@ -15,13 +17,26 @@
         table{ width:100%; border-collapse:collapse; margin-top:10px; }
         th, td{ border-bottom:1px solid #1e293b; padding:8px; text-align:center; font-size:14px; }
         th{ background:#122135; }
+        .btn-home { background: #334155; color: white; margin-bottom: 20px; padding: 10px; border-radius: 8px; border: none; cursor: pointer; }
         .badge-good{color:#22c55e;}
         .badge-mid{color:#facc15;}
         .badge-bad{color:#ef4444;}
     </style>
-</head>
 <body>
 <div class="container">
+    <button class="btn-home" onclick="location.href='/'">🏠 العودة للرئيسية</button>
+    <h1>📊 لوحة التحكم</h1>
+    <div class="section">
+        <h2>📦 إحصائيات عامة</h2>
+        <div class="stats">
+            <div class="stat"><div>إجمالي الطلبات</div><strong id="totalCmd">0</strong></div>
+            <div class="stat"><div>المؤكدة</div><strong id="confirmedCmd">0</strong></div>
+        </div>
+    </div>
+    <div class="section">
+        <h2>👥 الزبائن</h2>
+        <table id="clientsTable">
+           <tr><th>الهاتف</th><th>تأكيدات</th><th>التقييم</th></tr>
     <h1>📊 Tableau Admin – Confirmi</h1>
     <div class="section">
         <h2>📦 Statistiques globales</h2>
@@ -48,12 +63,25 @@
     <div class="section">
         <h2>🧾 Dernières transactions</h2>
         <table id="transactionsTable">
-            <thead><tr><th>ID</th><th>Client</th><th>Montant</th><th>État</th></tr></thead>
+            <thead><tr><th>ID</th><th>Client</th><th>Montant</th><th>État</th></tr>
             <tbody></tbody>
         </table>
     </div>
 </div>
 <script>
+const sellerId = localStorage.getItem('sellerId');
+async function loadDashboard(){
+    if(!sellerId) return;
+    const res = await fetch("/admin/dashboard/" + sellerId);
+    const data = await res.json();
+    document.getElementById("totalCmd").innerText = data.stats.total;
+    document.getElementById("confirmedCmd").innerText = data.stats.confirmed;
+    const cBody = document.querySelector("#clientsTable tbody");
+    cBody.innerHTML = "";
+    for(const phone in data.clients){
+        const c = data.clients[phone];
+        cBody.innerHTML += `<tr><td>${phone}</td><td>${c.confirmed}</td><td>${c.score}% ${c.badge}</td></tr>`;
+    }
 async function loadDashboard(){
     try{
         const res = await fetch("/admin/dashboard");
