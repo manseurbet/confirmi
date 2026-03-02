@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
   <meta charset="UTF-8">
   <title>Confirmi Simple Prototype</title>
   <style>
@@ -10,7 +9,6 @@
     button { margin-top: 5px; }
     small { display: block; color: #666; margin-top: 5px; }
   </style>
-</head>
 <body>
 
 <h2>Confirmi Simple Prototype</h2>
@@ -18,13 +16,13 @@
 <div id="transactions-container"></div>
 
 <script>
-  // ==== Données fictives ====
+  //  Données fictives 
   const transactions = [
     { id: "CONF-2026-014", montant: 125000, reference: "CONF-2026-014", statut: "en_attente", preuve: null, date_creation: "2026-01-29T12:00:00", date_maj: null },
     { id: "CONF-2026-015", montant: 80000, reference: "CONF-2026-015", statut: "en_attente", preuve: null, date_creation: "2026-01-29T12:05:00", date_maj: null }
   ];
 
-  // ==== Labels pour les statuts ====
+  //  Labels pour les statuts 
   const statutLabels = {
     en_attente: "En attente de règlement",
     reglement_initie: "Règlement initié",
@@ -32,7 +30,7 @@
     reglement_refuse: "Règlement refusé"
   };
 
-  // ==== Fonction pour afficher les transactions ====
+  // Fonction pour afficher les transactions 
   function renderTransactions() {
     const container = document.getElementById("transactions-container");
     container.innerHTML = "";
@@ -56,7 +54,7 @@
     });
   }
 
-  // ==== Déposer preuve ====
+  //  Déposer preuve 
   function deposerPreuve(id) {
     const input = document.getElementById(`preuve-${id}`);
     if (!input.files.length) {
@@ -75,7 +73,7 @@
     document.getElementById(`message-${id}`).innerText = "Document reçu. Traitement en cours.";
   }
 
-  // ==== Validation par le bénéficiaire ====
+  //  Validation par le bénéficiaire 
   function validerReglement(id, accepte = true) {
     const transaction = transactions.find(t => t.id === id);
     transaction.statut = accepte ? "reglement_valide" : "reglement_refuse";
@@ -87,7 +85,7 @@
       : "Règlement refusé, veuillez fournir une nouvelle preuve.";
   }
 
-  // ==== Initialisation ====
+  //  Initialisation 
   renderTransactions();
 
 </script>
