@@ -120,4 +120,62 @@ app.get("/admin/dashboard/:sellerId", (req, res) => {
   res.json({ success: true, stats: { total: transactions.length, confirmed: transactions.filter(t => t.confirmed).length }, clients, transactions });
 });
 
+// --- Global Admin Route ---
+app.get("/admin/global-data", (req, res) => {
+  try {
+    const transactions = JSON.parse(fs.readFileSync(transactionsFile, "utf8"));
+    const sellersData = {};
+    let totalConfirmed = 0;
+    let totalPending = 0;
+
+    transactions.forEach((t) => {
+      const sId = t.sellerId || "inconnu";
+      if (!sellersData[sId]) {
+        sellersData[sId] = { transactions: [] };
+      }
+      sellersData[sId].transactions.push(t);
+      if (t.confirmed) totalConfirmed++;
+      else totalPending++;
+    });
+
+    res.json({
+      success: true,
+      sellersCount: Object.keys(sellersData).length,
+      totalConfirmed,
+      totalPending,
+      sellersData,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+// --- Global Admin Route ---
+app.get("/admin/global-data", (req, res) => {
+  try {
+    const transactions = JSON.parse(fs.readFileSync(transactionsFile, "utf8"));
+    const sellersData = {};
+    let totalConfirmed = 0;
+    let totalPending = 0;
+
+    transactions.forEach((t) => {
+      const sId = t.sellerId || "inconnu";
+      if (!sellersData[sId]) {
+        sellersData[sId] = { transactions: [] };
+      }
+      sellersData[sId].transactions.push(t);
+      if (t.confirmed) totalConfirmed++;
+      else totalPending++;
+    });
+
+    res.json({
+      success: true,
+      sellersCount: Object.keys(sellersData).length,
+      totalConfirmed,
+      totalPending,
+      sellersData,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 app.listen(PORT, "0.0.0.0", () => console.log(`✅ Confirmi port ${PORT}`));
