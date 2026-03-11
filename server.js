@@ -50,10 +50,8 @@ function badge(score) {
 }
 
 app.get("/score/client/:phone", (req, res) => {
-  const sellerId = req.query.sellerId || "default";
   const scores = JSON.parse(fs.readFileSync(scoresFile, 'utf8'));
-  scores.vendeurs[sellerId] ??= { clients: {} };
-  const client = scores.vendeurs[sellerId].clients[req.params.phone] || { ok: 0, ko: 0 };
+  const client = scores.clients[req.params.phone] || { ok: 0, ko: 0 };
   const score = computeScore(client);
   res.json({ score, badge: badge(score) });
 });
@@ -88,16 +86,42 @@ app.post("/confirm-transaction/:id", upload.single("attachment"), (req, res) => 
   const transactions = JSON.parse(fs.readFileSync(transactionsFile, 'utf8'));
   const scores = JSON.parse(fs.readFileSync(scoresFile, 'utf8'));
   const t = transactions.find(x => x.transactionId === req.params.id);
-  if (!t || t.confirmed) return res.json({ success: false });
+  if (!t || t.confirmed || t.refused) return res.json({ success: false });
 
   t.confirmed = true;
   t.confirmationDate = new Date().toISOString();
   if (req.file) {
     t.attachment = "/uploads/" + req.file.filename;
   }
+  // Update global client score
+  scores.clients[t.clientPhone] ??= { ok: 0, ko: 0 };
+  scores.clients[t.clientPhone].ok++;
+
   scores.vendeurs[t.sellerId] ??= { clients: {} };
   scores.vendeurs[t.sellerId].clients[t.clientPhone] ??= { ok: 0, ko: 0 };
   scores.vendeurs[t.sellerId].clients[t.clientPhone].ok++;
+
+  fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
+  fs.writeFileSync(scoresFile, JSON.stringify(scores, null, 2));
+  res.json({ success: true });
+});
+
+app.post("/refuse-transaction/:id", (req, res) => {
+  const transactions = JSON.parse(fs.readFileSync(transactionsFile, 'utf8'));
+  const scores = JSON.parse(fs.readFileSync(scoresFile, 'utf8'));
+  const t = transactions.find(x => x.transactionId === req.params.id);
+  if (!t || t.confirmed || t.refused) return res.json({ success: false });
+
+  t.refused = true;
+  t.refusalDate = new Date().toISOString();
+
+  // Update global client score (penalty)
+  scores.clients[t.clientPhone] ??= { ok: 0, ko: 0 };
+  scores.clients[t.clientPhone].ko++;
+
+  scores.vendeurs[t.sellerId] ??= { clients: {} };
+  scores.vendeurs[t.sellerId].clients[t.clientPhone] ??= { ok: 0, ko: 0 };
+  scores.vendeurs[t.sellerId].clients[t.clientPhone].ko++;
 
   fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
   fs.writeFileSync(scoresFile, JSON.stringify(scores, null, 2));
@@ -111,11 +135,13 @@ app.get("/transactions/:sellerId", (req, res) => {
 
 app.get("/admin/dashboard/:sellerId", (req, res) => {
   const transactions = JSON.parse(fs.readFileSync(transactionsFile, 'utf8')).filter(t => t.sellerId === req.params.sellerId);
-  const scores = JSON.parse(fs.readFileSync(scoresFile, 'utf8')).vendeurs[req.params.sellerId] || { clients: {} };
+  const scores = JSON.parse(fs.readFileSync(scoresFile, 'utf8'));
+  const sellerScores = scores.vendeurs[req.params.sellerId] || { clients: {} };
   const clients = {};
-  for (const phone in scores.clients) {
-    const s = computeScore(scores.clients[phone]);
-    clients[phone] = { confirmed: scores.clients[phone].ok, score: s, badge: badge(s) };
+  for (const phone in sellerScores.clients) {
+    const globalClient = scores.clients[phone] || { ok: 0, ko: 0 };
+    const s = computeScore(globalClient);
+    clients[phone] = { confirmed: sellerScores.clients[phone].ok, score: s, badge: badge(s) };
   }
   res.json({ success: true, stats: { total: transactions.length, confirmed: transactions.filter(t => t.confirmed).length }, clients, transactions });
 });
@@ -149,33 +175,5 @@ app.get("/admin/global-data", (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
-// --- Global Admin Route ---
-app.get("/admin/global-data", (req, res) => {
-  try {
-    const transactions = JSON.parse(fs.readFileSync(transactionsFile, "utf8"));
-    const sellersData = {};
-    let totalConfirmed = 0;
-    let totalPending = 0;
 
-    transactions.forEach((t) => {
-      const sId = t.sellerId || "inconnu";
-      if (!sellersData[sId]) {
-        sellersData[sId] = { transactions: [] };
-      }
-      sellersData[sId].transactions.push(t);
-      if (t.confirmed) totalConfirmed++;
-      else totalPending++;
-    });
-
-    res.json({
-      success: true,
-      sellersCount: Object.keys(sellersData).length,
-      totalConfirmed,
-      totalPending,
-      sellersData,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
 app.listen(PORT, "0.0.0.0", () => console.log(`✅ Confirmi port ${PORT}`));
