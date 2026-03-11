@@ -10,20 +10,18 @@ body{margin:0;font-family:Arial, sans-serif;background:linear-gradient(135deg,#0
 .box{max-width:500px;width:100%;background:#0b1220;border-radius:16px;padding:32px 26px;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
 h1{font-size:28px;margin-bottom:12px;text-align:center;}
 h1 span{color:#22c55e;}
-.score-card { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; border: 1px solid #334155; }
-.score-label { font-size: 14px; color: #94a3b8; margin-bottom: 5px; }
-.score-value { font-size: 24px; font-weight: bold; color: #22c55e; }
-form{ display:flex; flex-direction:column; gap:15px; }
-label{ font-weight:bold; font-size:14px; }
-input, textarea{ width:100%; padding:12px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff; font-size:14px; box-sizing:border-box; }
-button{ width:100%; padding:14px; background:#22c55e; color:#022c22; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer; transition:0.3s; }
-button:hover{ background:#16a34a; }
-.btn-home { background: #334155; color: white; margin-bottom: 20px; }
-#resultSection{ display:none; margin-top:25px; padding:20px; background:#122135; border-radius:12px; border:1px dashed #22c55e; text-align:center; }
-.link-input { background:#0b1220; border:1px solid #334155; padding:10px; border-radius:6px; margin:10px 0; width:100%; text-align:center; color:#38bdf8; font-family:monospace; }
-.btn-secondary { background:#334155; color:#fff; margin-top:10px; }
-.btn-whatsapp { background:#25d366; color:#fff; margin-top:10px; }
-.btn-sms { background:#0ea5e9; color:#fff; margin-top:10px; }
+.score-card{background:#1e293b;padding:15px;border-radius:12px;margin-bottom:20px;text-align:center;border:1px solid #334155;}
+.score-label{font-size:14px;color:#94a3b8;margin-bottom:5px;}
+.score-value{font-size:24px;font-weight:bold;color:#22c55e;}
+form{display:flex;flex-direction:column;gap:15px;}
+label{font-weight:bold;font-size:14px;}
+input, textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:14px;box-sizing:border-box;}
+button{width:100%;padding:14px;background:#22c55e;color:#022c22;border:none;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer;transition:0.3s;}
+button:hover{opacity:0.9;}
+.btn-home{background:#334155;color:white;margin-bottom:20px;}
+#resultSection{display:none;margin-top:25px;padding:20px;background:#122135;border-radius:12px;border:1px dashed #22c55e;text-align:center;}
+.btn-whatsapp{background:#25d366;color:#fff;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-sms{background:#0ea5e9;color:#fff;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;}
 </style>
 </head>
 <body>
@@ -32,8 +30,8 @@ button:hover{ background:#16a34a; }
     <button class="btn-home" onclick="location.href='/'">🏠 العودة للرئيسية</button>
     <h1>Confirmi <span>✓</span></h1>
     <div class="score-card">
-        <div class="score-label">⭐ تقييم موثوقية الزبون:</div>
-        <div id="scoreDisplay"><span class="score-value" id="scoreNum">--</span> <span id="badgeText"></span></div>
+      <div class="score-label">⭐ تقييم موثوقية الزبون:</div>
+      <div id="scoreDisplay"><span class="score-value" id="scoreNum">--</span> <span id="badgeText"></span></div>
     </div>
     <form id="orderForm">
       <input type="hidden" id="sellerId">
@@ -51,12 +49,16 @@ button:hover{ background:#16a34a; }
       <input type="file" id="productPhoto" accept="image/*">
       <button type="submit">إنشاء رابط التأكيد</button>
     </form>
+
     <div id="resultSection">
-      <p style="color:#22c55e; font-weight:bold;">✅ تم إنشاء الرابط بنجاح!</p>
-      <input type="text" id="finalLink" class="link-input" readonly>
-      <button class="btn-secondary" onclick="copyLink()">نسخ الرابط 📋</button>
-      <button class="btn-whatsapp" onclick="sendWhatsApp()">WhatsApp 💬</button>
-      <button class="btn-sms" onclick="sendSMS()">SMS 📱</button>
+      <p style="color:#22c55e;font-weight:bold;font-size:18px;">✅ تم إنشاء الطلب بنجاح!</p>
+      <p style="color:#94a3b8;font-size:14px;margin-top:0;">اختر طريقة إرسال الرابط للزبون:</p>
+      <button class="btn-whatsapp" onclick="sendWhatsApp()">
+        <span style="font-size:20px;">💬</span> إرسال عبر WhatsApp
+      </button>
+      <button class="btn-sms" onclick="sendSMS()">
+        <span style="font-size:20px;">📱</span> إرسال عبر SMS
+      </button>
     </div>
   </div>
 </div>
@@ -65,38 +67,50 @@ const sellerId = localStorage.getItem('sellerId') || 'seller_' + Math.random().t
 localStorage.setItem('sellerId', sellerId);
 document.getElementById('sellerId').value = sellerId;
 
+let generatedLink = '';
+let clientPhoneNumber = '';
+
 const phoneInput = document.getElementById('clientPhone');
 phoneInput.addEventListener('input', async () => {
-    if(phoneInput.value.trim().length >= 10){
-        const res = await fetch(`/score/client/${phoneInput.value.trim()}?sellerId=${sellerId}`);
-        const data = await res.json();
-        document.getElementById('scoreNum').innerText = data.score + '%';
-        document.getElementById('badgeText').innerText = data.badge;
-    }
+  if (phoneInput.value.trim().length >= 10) {
+    const res = await fetch(`/score/client/${phoneInput.value.trim()}`);
+    const data = await res.json();
+    document.getElementById('scoreNum').innerText = data.score + '%';
+    document.getElementById('badgeText').innerText = data.badge;
+  }
 });
 
 document.getElementById('orderForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append('sellerId', sellerId);
-    formData.append('clientName', document.getElementById('clientName').value);
-    formData.append('clientPhone', document.getElementById('clientPhone').value);
-    formData.append('productRef', document.getElementById('productRef').value);
-    formData.append('amount', document.getElementById('amount').value);
-    formData.append('description', document.getElementById('description').value);
-    const photo = document.getElementById('productPhoto').files[0];
-    if(photo) formData.append('productPhoto', photo);
-    const res = await fetch('/create-confirmation', { method: 'POST', body: formData });
-    const data = await res.json();
-    if(data.success){
-        document.getElementById('finalLink').value = data.clientLink;
-        document.getElementById('resultSection').style.display = 'block';
-    }
+  e.preventDefault();
+  const formData = new FormData();
+  formData.append('sellerId', sellerId);
+  formData.append('clientName', document.getElementById('clientName').value);
+  formData.append('clientPhone', phoneInput.value);
+  formData.append('productRef', document.getElementById('productRef').value);
+  formData.append('amount', document.getElementById('amount').value);
+  formData.append('description', document.getElementById('description').value);
+  const photo = document.getElementById('productPhoto').files[0];
+  if (photo) formData.append('productPhoto', photo);
+
+  const res = await fetch('/create-confirmation', { method: 'POST', body: formData });
+  const data = await res.json();
+  if (data.success) {
+    generatedLink = data.clientLink;
+    clientPhoneNumber = phoneInput.value.trim().replace(/^0/, '213');
+    document.getElementById('orderForm').style.display = 'none';
+    document.getElementById('resultSection').style.display = 'block';
+  }
 };
 
-function copyLink() { navigator.clipboard.writeText(document.getElementById("finalLink").value); alert("تم النسخ!"); }
-function sendWhatsApp() { window.open(`https://wa.me/?text=${encodeURIComponent("تأكيد الطلب: " + document.getElementById("finalLink").value)}`, '_blank'); }
-function sendSMS() { window.location.href = `sms:?body=${encodeURIComponent("تأكيد الطلب: " + document.getElementById("finalLink").value)}`; }
+function sendWhatsApp() {
+  const msg = encodeURIComponent('مرحبا، يرجى تأكيد طلبك عبر الرابط التالي:\n' + generatedLink);
+  window.open(`https://wa.me/${clientPhoneNumber}?text=${msg}`, '_blank');
+}
+
+function sendSMS() {
+  const msg = encodeURIComponent('تأكيد الطلب: ' + generatedLink);
+  window.location.href = `sms:${clientPhoneNumber}?body=${msg}`;
+}
 </script>
 </body>
 </html>
