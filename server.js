@@ -152,6 +152,7 @@ app.get("/admin/global-data", (req, res) => {
     const transactions = JSON.parse(fs.readFileSync(transactionsFile, "utf8"));
     const sellersData = {};
     let totalConfirmed = 0;
+    let totalRefused = 0;
     let totalPending = 0;
 
     transactions.forEach((t) => {
@@ -161,6 +162,7 @@ app.get("/admin/global-data", (req, res) => {
       }
       sellersData[sId].transactions.push(t);
       if (t.confirmed) totalConfirmed++;
+      else if (t.refused) totalRefused++;
       else totalPending++;
     });
 
@@ -168,6 +170,7 @@ app.get("/admin/global-data", (req, res) => {
       success: true,
       sellersCount: Object.keys(sellersData).length,
       totalConfirmed,
+      totalRefused,
       totalPending,
       sellersData,
     });
