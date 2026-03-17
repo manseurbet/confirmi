@@ -72,8 +72,21 @@ button{width:100%;padding:12px;background:#22c55e;color:#022c22;border:none;bord
 <input type="file" id="attachment">
 </div>
 
-<button type="submit">تأكيد الطلب</button>
+<div style="display: flex; gap: 10px;">
+  <button type="submit" style="background: #22c55e;">✅ تأكيد الطلب</button>
+  <button type="button" id="refuseBtn" style="background: #ef4444;">❌ رفض الطلب</button>
+</div>
 </form>
+
+<div id="successMessage" style="display: none; margin-top: 20px; padding: 15px; background: #166534; border-radius: 10px; font-size: 16px;">
+  <p style="margin: 0; font-weight: bold;">✅ تم التأكيد بنجاح!</p>
+  <p style="margin: 5px 0 0; opacity: 0.9; font-size: 14px;">شكراً على تأكيدك. يمكن للبائع الآن متابعة الطلب.</p>
+</div>
+
+<div id="refusedMessage" style="display: none; margin-top: 20px; padding: 15px; background: #7c2d12; border-radius: 10px; font-size: 16px;">
+  <p style="margin: 0; font-weight: bold;">❌ تم رفض الطلب</p>
+  <p style="margin: 5px 0 0; opacity: 0.9; font-size: 14px;">تم إبلاغ البائع برفضك للطلب.</p>
+</div>
 
 </div>
 </div>
@@ -130,8 +143,27 @@ clientForm.onsubmit = async e=>{
 
   const r = await fetch("/confirm-transaction/"+id,{method:"POST",body:fd});
   const d = await r.json();
-  if(d.success) alert("تم التأكيد بنجاح ✅");
-  else alert(d.message);
+  if(d.success) {
+    clientForm.style.display = "none";
+    document.getElementById("successMessage").style.display = "block";
+  } else {
+    alert(d.message || "حدث خطأ");
+  }
+};
+
+/* refusal */
+document.getElementById("refuseBtn").onclick = async ()=>{
+  if(!confirm("هل أنت متأكد من رفضك للطلب؟")) return;
+  
+  const id = getId();
+  const r = await fetch("/refuse-transaction/"+id, {method:"POST"});
+  const d = await r.json();
+  if(d.success) {
+    clientForm.style.display = "none";
+    document.getElementById("refusedMessage").style.display = "block";
+  } else {
+    alert(d.message || "حدث خطأ");
+  }
 };
 </script>
 
